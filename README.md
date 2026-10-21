@@ -7,9 +7,9 @@
 每班只有 **75 秒**。你不仅要分对物品，还会遇到安全、效率与诚信之间的抉择。下班时，分数会结算，城市也会给出自己的回答。
 
 <p align="center">
-  <img src="assets/screenshot.png" width="280" alt="第二次生命游戏首页">
+  <img src="screenshot.png" width="280" alt="第二次生命游戏首页">
   &nbsp;&nbsp;
-  <img src="assets/gameplay.png" width="280" alt="游戏中的夜班分拣界面">
+  <img src="gameplay.png" width="280" alt="游戏中的夜班分拣界面">
 </p>
 
 ## ▶ 开始游戏
