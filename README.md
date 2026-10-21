@@ -16,9 +16,9 @@
 
 **在线体验：** 本仓库启用 GitHub Pages 后，访问
 
-`https://你的GitHub用户名.github.io/second-life-75s/`
+`https://zhipeng1.github.io/The-second-life-of-an-object/`
 
-无需安装、注册或下载 App；也可以直接下载仓库中的 `index.html`，用现代浏览器打开。仓库创建和上线操作见 [部署指南](DEPLOY.md)。
+无需安装、注册或下载 App；也可以直接下载仓库中的 `index.html`，用现代浏览器打开。
 
 ## 怎么玩
 
