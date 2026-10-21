@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>第二次生命 · 75秒夜班</title>
+<meta name="description" content="75 秒夜班分拣：一件物品，一次选择。左划回收，右划再用，长按检查。你的每个判断，都在改变窗外那座城市。">
+<meta property="og:title" content="第二次生命 · 75秒夜班">
+<meta property="og:description" content="左划回收，右划再用。你的每个判断，都在改变窗外那座城市。来比比谁的城市更会呼吸。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23161618'/%3E%3Ctext x='50' y='68' font-size='56' text-anchor='middle'%3E%E2%99%BB%3C/text%3E%3C/svg%3E">
+<style>
+:root{--text:#f5f5f7;--sec:#a1a1a6;--ter:#73737a;--green:#9fd0a0;--amber:#e8c789;--red:#e0806c}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;overscroll-behavior:none}
+body{display:flex;justify-content:center;align-items:stretch;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+  color:var(--text);-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+#app{position:relative;width:100%;max-width:520px;height:100vh;height:100dvh;overflow:hidden;background:#0b0b0d;box-shadow:0 0 80px rgba(0,0,0,.7)}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.hudBtn{position:absolute;z-index:3;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.10);
+  background:rgba(20,20,22,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:none;place-items:center;padding:0;cursor:pointer}
+.hudBtn.show{display:grid}
+.hudBtn:active{transform:scale(.92)}
+#pauseBtn{left:12px;top:calc(env(safe-area-inset-top,0px) + 12px)}
+#pauseBtn i{display:block;width:12px;height:13px;border-left:4px solid #ddd;border-right:4px solid #ddd}
+
+#overlay{position:absolute;inset:0;display:none;place-items:center;z-index:5;
+  padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom));
+  background:radial-gradient(circle at 50% 22%,rgba(255,255,255,.06),transparent 36%),linear-gradient(rgba(5,5,6,.30),rgba(5,5,6,.74));
+  -webkit-backdrop-filter:blur(16px) saturate(120%);backdrop-filter:blur(16px) saturate(120%)}
+#overlay.show{display:grid}
+.card{width:min(100%,410px);max-height:calc(100dvh - 28px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));overflow:auto;
+  -webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none;
+  border-radius:30px;padding:28px 22px 20px;text-align:center;
+  background:linear-gradient(180deg,rgba(34,34,37,.88),rgba(21,21,23,.86));
+  border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.04);
+  animation:pop .32s cubic-bezier(.2,.9,.3,1.2)}
+.card::-webkit-scrollbar{display:none}
+@keyframes pop{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+@keyframes stamp{0%{transform:scale(2.4) rotate(-14deg);opacity:0}60%{transform:scale(.92) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(232,199,137,.0)}50%{box-shadow:0 0 0 6px rgba(232,199,137,.12)}}
+.kicker{font-size:10px;line-height:1.3;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8e8e93}
+.card h1{margin:10px 0 6px;font-size:clamp(42px,12vw,56px);line-height:1;font-weight:800;letter-spacing:-.04em}
+.card h2{margin:8px 0 8px;font-size:clamp(26px,7.5vw,34px);line-height:1.1;font-weight:750;letter-spacing:-.03em}
+.sub{max-width:330px;margin:8px auto 16px;color:var(--sec);font-size:13px;line-height:1.65}
+.heroArt{width:100%;height:118px;margin:4px 0 2px;display:block}
+.ruleRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.rule{padding:12px 4px 10px;border-radius:16px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.045)}
+.rule b{display:block;font-size:20px;line-height:1;font-weight:650}
+.rule span{display:block;margin-top:7px;font-size:10.5px;font-weight:650;color:#9a9aa0}
+.rule em{display:block;margin-top:3px;font-style:normal;font-size:9px;color:#6d6d73}
+.btns{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:6px}
+.btns .btn{flex:1 1 0}
+.btn{min-width:120px;height:50px;padding:0 16px;border-radius:16px;border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.075);font-weight:700;font-size:14px;cursor:pointer;transition:transform .12s,background .12s}
+.btn.primary{background:#f5f5f7;color:#111113;border-color:#f5f5f7;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.btn.gold{background:linear-gradient(180deg,#f1d7a1,#d9b46c);color:#2a1e0a;border-color:#efd39b;animation:glow 2.2s infinite}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,.08);color:#b8b8be;height:44px;font-size:13px}
+.btn small{display:block;font-size:10px;font-weight:600;opacity:.65;margin-top:1px}
+.btn.tall{height:58px;line-height:1.15}
+.btn:active{transform:scale(.97)}
+.row{display:flex;gap:9px;margin-top:9px}
+.row .btn{flex:1}
+.statGrid{display:grid;grid-template-columns:repeat(3,1fr);margin:16px 0;border-top:1px solid rgba(255,255,255,.075);border-bottom:1px solid rgba(255,255,255,.075)}
+.statGrid.four{grid-template-columns:repeat(4,1fr)}
+.stat{min-width:0;padding:13px 4px 12px;color:#7a7a80;font-size:9.5px;font-weight:650}
+.stat+.stat{border-left:1px solid rgba(255,255,255,.065)}
+.stat strong{display:block;margin-top:5px;color:var(--text);font-size:18px;line-height:1;font-weight:700;letter-spacing:-.02em}
+.challenge{margin:4px 0 14px;padding:12px 14px;border-radius:16px;background:linear-gradient(90deg,rgba(232,199,137,.16),rgba(232,199,137,.05));
+  border:1px solid rgba(232,199,137,.25);color:#efdcb4;font-size:12.5px;line-height:1.55;text-align:left}
+.challenge b{color:#fff;font-size:15px}
+.rankWrap{position:relative;display:flex;align-items:center;justify-content:center;gap:16px;margin:10px 0 2px}
+.rank{width:84px;height:84px;border-radius:24px;display:grid;place-items:center;font-size:52px;font-weight:900;letter-spacing:-.04em;
+  animation:stamp .55s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:.25s;border:2px solid currentColor}
+.rank.S{color:#f1d08a;background:rgba(241,208,138,.10)}.rank.A{color:#a9d8a6;background:rgba(169,216,166,.08)}
+.rank.B{color:#9cc3d6;background:rgba(156,195,214,.08)}.rank.C{color:#c9b8a0;background:rgba(201,184,160,.07)}.rank.D{color:#a09a96;background:rgba(160,154,150,.06)}
+.scoreBox{text-align:left}
+.scoreHero{font-size:clamp(46px,14vw,62px);line-height:.95;font-weight:800;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.scoreCap{margin-top:5px;color:#8a8a90;font-size:11px;font-weight:650}
+.badge{display:inline-block;margin-top:8px;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.06em;background:#f1d08a;color:#2a1e0a;animation:rise .4s .8s both}
+.breakdown{margin:14px 0 4px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);text-align:left;font-size:12px;color:#a9a9ae}
+.breakdown div{display:flex;justify-content:space-between;padding:3px 0;animation:rise .35s both}
+.breakdown b{color:#f2f2f4;font-variant-numeric:tabular-nums}
+.breakdown .medal b{color:#f1d08a}
+.esg{margin:12px 0 4px;text-align:left}
+.esgRow{display:grid;grid-template-columns:62px 1fr 34px;align-items:center;gap:10px;margin:9px 0;font-size:12px;color:#c7c7cc;font-weight:650}
+.esgRow .bar{position:relative;height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:visible}
+.esgRow .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;width:0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.esgRow .bar s{position:absolute;left:70%;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.35);border-radius:2px}
+.esgRow span{text-align:right;font-variant-numeric:tabular-nums;color:#f2f2f4}
+.cityLine{margin:14px 0;padding:15px;border-radius:18px;text-align:left;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.075);color:#a9a9ae;font-size:12.5px;line-height:1.75}
+.cityLine b{display:block;color:#f0f0f2;font-size:17px;line-height:1.3;font-weight:750;margin-bottom:6px}
+.review{margin:12px 0;text-align:left}
+.review h3,.sectionT{margin:0 0 8px;font-size:11px;font-weight:750;letter-spacing:.08em;color:#8e8e93}
+.rv{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(255,255,255,.06);font-size:12px;line-height:1.55;color:#a9a9ae}
+.rv img{width:40px;height:40px;border-radius:11px;background:#f1f1f3;flex:none}
+.rv b{color:#f2f2f4}
+.rv .go{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:800}
+.go.l{background:rgba(159,208,160,.16);color:#a9d8a6}.go.r{background:rgba(232,199,137,.16);color:#efd39b}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.cell{position:relative;aspect-ratio:1;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);display:grid;place-items:center;overflow:hidden;cursor:pointer}
+.cell img{width:82%;height:82%}
+.cell.lock img{filter:brightness(0) invert(.18);opacity:.8}
+.cell.on{outline:2px solid #e8c789}
+.cell .n{position:absolute;left:0;right:0;bottom:3px;font-size:8.5px;color:#8e8e93;font-weight:650}
+.info{min-height:64px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.045);text-align:left;font-size:12px;line-height:1.6;color:#a9a9ae}
+.info b{color:#f2f2f4;font-size:14px}
+.progress{height:6px;border-radius:9px;background:rgba(255,255,255,.07);margin:10px 0 2px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#9fd0a0,#e8c789);border-radius:9px}
+.shareImg{width:100%;border-radius:20px;display:block;margin:6px 0 10px;box-shadow:0 12px 40px rgba(0,0,0,.45);-webkit-touch-callout:default;user-select:auto;-webkit-user-select:auto;touch-action:auto}
+.tip{font-size:11px;color:#8e8e93;margin:4px 0 10px}
+.toggle{display:flex;justify-content:space-between;align-items:center;padding:14px 4px;border-top:1px solid rgba(255,255,255,.07);font-size:14px;font-weight:600;color:#d8d8dc}
+.sw{width:50px;height:30px;border-radius:99px;background:rgba(255,255,255,.12);position:relative;border:0;cursor:pointer;transition:background .2s}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw.on{background:#7fbf83}.sw.on::after{transform:translateX(20px)}
+.mini{font-size:10.5px;color:#6d6d73;margin-top:12px;line-height:1.6}
+#toastDom{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 28px);transform:translateX(-50%);z-index:9;
+  padding:10px 16px;border-radius:14px;background:rgba(30,30,32,.95);border:1px solid rgba(255,255,255,.1);font-size:13px;font-weight:650;
+  opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}
+#toastDom.show{opacity:1}
+@media (max-width:350px){.card{padding:22px 16px 16px;border-radius:24px}.btn{height:46px;min-width:100px}.rank{width:70px;height:70px;font-size:42px}}
+@media (max-height:640px){.heroArt{height:84px}.card h1{font-size:40px}.ruleRow{margin:10px 0}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="第二次生命：可持续发展一指小游戏"></canvas>
+  <button class="hudBtn" id="pauseBtn" aria-label="暂停"><i></i></button>
+  <div id="overlay" class="show"><div class="card" id="panel"></div></div>
+  <div id="toastDom"></div>
+</div>
+<script>
+(() => {
+"use strict";
+/* ============================================================
+   基础工具
+   ============================================================ */
+const canvas=document.getElementById("game"),mainCtx=canvas.getContext("2d");
+let ctx=mainCtx;
+const overlay=document.getElementById("overlay"),panel=document.getElementById("panel"),pauseBtn=document.getElementById("pauseBtn");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,easeOut=t=>1-Math.pow(1-t,3),easeBack=t=>{const c=1.7;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2)};
+const FONT='-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif';
+const font=(w,s)=>`${w} ${s}px ${FONT}`;
+const store={
+  get(k,d){try{const v=localStorage.getItem("sl2_"+k);return v===null?d:JSON.parse(v)}catch(_){return d}},
+  set(k,v){try{localStorage.setItem("sl2_"+k,JSON.stringify(v))}catch(_){}}
+};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+let rng=Math.random;
+const rand=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.floor(rng()*a.length)];
+function todayKey(){const d=new Date();return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate()}
+function dailyNo(){const d=new Date();d.setHours(0,0,0,0);return Math.floor((d-new Date(2026,9,1))/864e5)+1}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+let W=390,H=844,DPR=1,SAFE_TOP=0,SAFE_BOTTOM=0,L={};
+function readSafeAreas(){
+  const p=document.createElement("div");
+  p.style.cssText="position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+  document.body.appendChild(p);const cs=getComputedStyle(p);SAFE_TOP=parseFloat(cs.paddingTop)||0;SAFE_BOTTOM=parseFloat(cs.paddingBottom)||0;p.remove();
+}
+function layout(){
+  const S=clamp(Math.min(H/800,W/390),.74,1.06);
+  const hudTop=SAFE_TOP+10,hudBottom=hudTop+94;
+  const zoneH=Math.round(70*Math.min(1,S+.05)),zoneY=H-Math.max(SAFE_BOTTOM,8)-12-zoneH;
+  const spawnY=hudBottom+96*S,missY=zoneY-100*S;
+  L={S,hudTop,hudBottom,zoneH,zoneY,spawnY,missY,beltTop:hudBottom+4,beltBottom:zoneY-8};
+}
+function resize(){
+  const r=canvas.getBoundingClientRect();DPR=Math.min(2.5,window.devicePixelRatio||1);
+  W=Math.max(300,r.width);H=Math.max(480,r.height);
+  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+  mainCtx.setTransform(DPR,0,0,DPR,0,0);readSafeAreas();layout();
+}
+addEventListener("resize",resize,{passive:true});
+addEventListener("orientationchange",()=>setTimeout(resize,250));
+resize();
+
+/* ============================================================
+   音频：音效 + 轻量生成式背景音乐
+   ============================================================ */
+let audioCtx=null,master=null,musicBus=null,muted=store.get("mute",false),musicOn=store.get("music",true),hapticOn=store.get("haptic",true);
+function ensureAudio(){
+  try{
+    if(!audioCtx){
+      audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+      master=audioCtx.createGain();master.gain.value=muted?0:1;master.connect(audioCtx.destination);
+      musicBus=audioCtx.createGain();musicBus.gain.value=musicOn?1:0;
+      const lp=audioCtx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=2400;musicBus.connect(lp).connect(master);
+    }
+    if(audioCtx.state!=="running"&&audioCtx.resume)audioCtx.resume();
+  }catch(_){}
+}
+function setMuted(m){muted=m;store.set("mute",m);if(master)master.gain.value=m?0:1}
+function setMusic(m){musicOn=m;store.set("music",m);if(musicBus)musicBus.gain.value=m?1:0}
+function tone(freq=300,d=.05,type="triangle",gain=.02,slide=0,when=0,bus){
+  if(!audioCtx||muted)return;
+  try{const t=audioCtx.currentTime+when,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type=type;o.frequency.setValueAtTime(freq,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide),t+d);
+    g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(gain,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+    o.connect(g).connect(bus||master);o.start(t);o.stop(t+d+.02)}catch(_){}
+}
+function noise(d=.08,gain=.03,freq=1200){
+  if(!audioCtx||muted)return;
+  try{const len=Math.floor(audioCtx.sampleRate*d),b=audioCtx.createBuffer(1,len,audioCtx.sampleRate),ch=b.getChannelData(0);
+    for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*(1-i/len);
+    const s=audioCtx.createBufferSource(),f=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
+    s.buffer=b;f.type="bandpass";f.frequency.value=freq;g.gain.value=gain;s.connect(f).connect(g).connect(master);s.start()}catch(_){}
+}
+const PENTA=[0,2,4,7,9,12,14,16,19,21];
+const note=n=>220*Math.pow(2,n/12);
+function sfx(n){
+  const lift=Math.min(streak,16);
+  if(n==="good"){tone(note(PENTA[lift%10]+12),.07,"triangle",.05,0);tone(note(PENTA[(lift+2)%10]+12),.09,"sine",.035,0,.045);noise(.05,.02,3000)}
+  if(n==="open"){tone(note(PENTA[lift%10]+7),.08,"sine",.05);tone(note(PENTA[(lift+1)%10]+12),.1,"sine",.04,0,.05)}
+  if(n==="bad"){tone(140,.16,"square",.035,-60);tone(98,.22,"sawtooth",.02,-30,.04);noise(.12,.05,400)}
+  if(n==="miss"){tone(180,.18,"triangle",.04,-90)}
+  if(n==="scan"){tone(520,.06,"sine",.03,300);tone(880,.08,"sine",.025,200,.07)}
+  if(n==="hold"){tone(300,.05,"sine",.012,60)}
+  if(n==="flow"){[0,4,7,12].forEach((s,i)=>tone(note(12+s),.14,"triangle",.045,0,i*.055))}
+  if(n==="event"){tone(196,.25,"sawtooth",.025,0);tone(233,.25,"sawtooth",.02,0,.12)}
+  if(n==="choose"){tone(330,.12,"triangle",.04,120)}
+  if(n==="tick"){tone(1200,.03,"square",.012)}
+  if(n==="count"){tone(660,.09,"triangle",.04)}
+  if(n==="go"){tone(880,.18,"triangle",.05,220);tone(1320,.2,"sine",.03,0,.05)}
+  if(n==="end"){[0,4,7,11,14].forEach((s,i)=>tone(note(s+3),.35,"triangle",.04,0,i*.09))}
+  if(n==="medal"){tone(1046,.15,"sine",.04);tone(1568,.2,"sine",.03,0,.08)}
+  if(n==="whoosh"){noise(.14,.04,1800)}
+  if(n==="ui"){tone(600,.04,"sine",.02,80)}
+}
+function vibe(p){if(!hapticOn)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(_){}}
+/* 背景音乐：随 FLOW 变得更密 */
+const music={on:false,next:0,step:0,timer:null};
+function musicStart(){
+  ensureAudio();if(!audioCtx||music.on)return;music.on=true;music.next=audioCtx.currentTime+.08;music.step=0;
+  music.timer=setInterval(musicTick,30);
+}
+function musicStop(){music.on=false;clearInterval(music.timer);music.timer=null}
+const CHORDS=[[0,4,7],[-3,0,4],[-7,-3,0],[-5,-1,2]];
+function musicTick(){
+  if(!music.on||!audioCtx||muted||!musicOn)return;
+  const prog=clamp(elapsed/SHIFT,0,1),bpm=96+prog*28+(rushing()?14:0),stepDur=60/bpm/2;
+  while(music.next<audioCtx.currentTime+.12){
+    const s=music.step,bar=Math.floor(s/8)%4,ch=CHORDS[bar],when=music.next-audioCtx.currentTime;
+    if(s%8===0){tone(note(ch[0]-12),stepDur*7,"sine",.05,0,when,musicBus);tone(note(ch[1]),stepDur*7,"sine",.012,0,when,musicBus)}
+    if(s%4===2)tone(note(ch[0]-12),stepDur*1.5,"triangle",.03,0,when,musicBus);
+    const m=multiplier(),dens=state==="playing"?(.18+m*.15):.1;
+    if(Math.random()<dens){const n=ch[Math.floor(Math.random()*3)]+12+(Math.random()<.3?12:0);tone(note(n),stepDur*1.6,"triangle",.014+m*.003,0,when,musicBus)}
+    if(m>=3&&s%2===1)noise(.03,.008,6000);
+    music.next+=stepDur;music.step++;
+  }
+}
+
+/* ============================================================
+   数据：物品 / 事件
+   flaw = 外观上能看出的瑕疵（细心观察即可判断，长按检查可确认）
+   ============================================================ */
+const ITEM_DEFS=[
+{id:"bottle",name:"PET 空瓶",type:"bottle",tier:1,mode:"clear",preferred:"left",inspect:"PET 1 · 已清空",why:"一次性塑料瓶不适合反复灌装，清空后回收再生最合适。",left:{env:1.5,people:.1,trust:.1},right:{env:-.5}},
+{id:"box",name:"快递纸箱",type:"box",tier:1,mode:"clear",preferred:"left",inspect:"干燥纸纤维 · 可回收",why:"干燥纸箱是高价值再生纸原料。",left:{env:1.4,people:.1,trust:.1},right:{env:.2,people:.2}},
+{id:"can",name:"铝制易拉罐",type:"can",tier:1,mode:"clear",preferred:"left",inspect:"单一铝材 · 可回收",why:"铝罐回收再生比原生铝节能约 95%。",left:{env:1.6,people:.1,trust:.1},right:{env:-.3}},
+{id:"shirt",name:"完整旧衬衫",type:"shirt",tier:1,mode:"clear",preferred:"right",inspect:"无破损 · 清洗后可继续使用",why:"完好的衣物直接再穿，比拆解成纤维省得多。",left:{env:.5,people:.1},right:{env:1.3,people:1.0,trust:.1}},
+{id:"battery",name:"废旧电池",type:"battery",tier:1,mode:"clear",preferred:"left",inspect:"有害成分 · 需专业回收",why:"电池含重金属，必须进入专业回收渠道。",left:{env:1.3,people:1.0,trust:.3},right:{env:-1.2,people:-1.5,trust:-.2}},
+{id:"newspaper",name:"旧报纸",type:"paper",tier:1,mode:"clear",preferred:"left",inspect:"干燥纸张 · 可回收",why:"旧报纸是再生纸的常见原料。",left:{env:1.2,people:.1,trust:.1},right:{env:-.2}},
+{id:"carton",name:"饮料纸盒",type:"carton",tier:1,mode:"clear",preferred:"left",inspect:"已清空 · 复合包装回收",why:"利乐包含纸、铝、塑三层，需要专门的复合包装回收。",left:{env:1.1,people:.1,trust:.2},right:{env:-.4}},
+{id:"bulb",name:"废灯泡",type:"bulb",tier:1,mode:"clear",preferred:"left",inspect:"已损坏 · 分类回收",why:"灯管灯泡可能含汞，要单独分类回收。",left:{env:1.1,people:.5,trust:.2},right:{env:-.7,people:-.3}},
+{id:"medicine",name:"空药瓶",type:"medicine",tier:1,mode:"clear",preferred:"left",inspect:"已清空 · 瓶体可回收",why:"药瓶不宜再装食品，回收瓶体材料更安全。",left:{env:1.0,people:.3,trust:.2},right:{env:-.4}},
+{id:"jar",name:"玻璃储物罐",type:"jar",tier:1,mode:"clear",preferred:"right",inspect:"完整清洁 · 适合继续使用",why:"完整的玻璃罐洗净就能继续装东西，再用优先于回收。",left:{env:.7,people:.1,trust:.1},right:{env:1.2,people:.6,trust:.2}},
+{id:"glass",name:"玻璃饮料瓶",type:"glass",tier:1,mode:"choice",preferred:null,inspect:"瓶体完好 · 两种路径都成立",why:"完好的玻璃瓶回收、再用都行。",left:{env:1.1,people:.1,trust:.1},right:{env:1.2,people:.7,trust:.1}},
+{id:"bike",name:"自行车零件",type:"bike",tier:2,mode:"choice",preferred:null,inspect:"金属完好 · 可翻新也可回收",why:"金属零件翻新或回收都有价值。",left:{env:1.0,people:.2,trust:.1},right:{env:1.0,people:.8,trust:.1}},
+{id:"cup",name:"陶瓷咖啡杯",type:"cup",tier:2,mode:"choice",preferred:null,inspect:"杯体完好 · 回收或再用都成立",why:"完好的杯子两条路都成立。",left:{env:.9,people:.1,trust:.1},right:{env:1.1,people:.6,trust:.1}},
+{id:"book",name:"旧书",type:"book",tier:2,mode:"choice",preferred:null,inspect:"书页完整 · 再流通或纸张回收都成立",why:"旧书可以捐赠流通，也可以回收纸张。",left:{env:.8,people:.2,trust:.1},right:{env:.8,people:.9,trust:.1}},
+{id:"foodbox",name:"玻璃饭盒",type:"foodbox",tier:2,mode:"choice",preferred:null,inspect:"清洁完整 · 可继续使用",why:"玻璃饭盒两条路都成立。",left:{env:.8,people:.1,trust:.1},right:{env:1.2,people:.6,trust:.1}},
+{id:"phone",name:"旧手机",type:"phone",tier:2,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"电池健康 83% · 屏幕可更换",why:"换块屏就能再用好几年，延长寿命最减碳。",left:{env:.7,people:.1,trust:.1},right:{env:1.5,people:.8,trust:.3}},
+ {tag:"swollen",flaw:"bulge",preferred:"left",inspect:"电池鼓包 · 不宜继续使用",why:"鼓包电池可能起火，必须交给专业回收。",left:{env:1.3,people:1.0,trust:.4},right:{env:-1.2,people:-1.8,trust:-.4}}]},
+{id:"shoes",name:"旧运动鞋",type:"shoes",tier:2,mode:"variant",variants:[
+ {tag:"good",preferred:"right",inspect:"鞋底磨损 18% · 仍可穿",why:"还能穿的鞋，捐出去比拆掉更有价值。",left:{env:.5,people:.1,trust:.1},right:{env:1.2,people:.9,trust:.2}},
+ {tag:"cracked",flaw:"crack",preferred:"left",inspect:"鞋底开裂 · 材料可分离",why:"鞋底开裂已不安全，拆分材料回收。",left:{env:1.1,people:.4,trust:.2},right:{env:-.5,people:-.7,trust:-.2}}]},
+{id:"toy",name:"儿童玩具",type:"toy",tier:2,mode:"variant",variants:[
+ {tag:"intact",preferred:"right",inspect:"结构完整 · 清洁后可继续使用",why:"完整玩具清洁后能送给下一个孩子。",left:{env:.5,people:.1,trust:.1},right:{env:1.1,people:1.1,trust:.2}},
+ {tag:"broken",flaw:"crack",preferred:"left",inspect:"边缘破损 · 存在划伤风险",why:"破损边缘会划伤孩子，不能再流通。",left:{env:.8,people:.8,trust:.3},right:{env:-.3,people:-1.2,trust:-.2}}]},
+{id:"charger",name:"手机充电器",type:"charger",tier:2,mode:"variant",variants:[
+ {tag:"works",preferred:"right",inspect:"输出稳定 · 绝缘正常",why:"工作正常的充电器继续用就好。",left:{env:.5,people:.1,trust:.1},right:{env:1.1,people:.7,trust:.2}},
+ {tag:"burnt",flaw:"burn",preferred:"left",inspect:"接口烧蚀 · 不宜继续使用",why:"接口烧蚀有短路风险，按电子废物回收。",left:{env:1.0,people:.8,trust:.3},right:{env:-.5,people:-1.3,trust:-.2}}]},
+{id:"umbrella",name:"旧雨伞",type:"umbrella",tier:2,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"伞骨轻微变形 · 可修复",why:"掰正伞骨就能接着用。",left:{env:.4,people:.1,trust:.1},right:{env:1.0,people:.7,trust:.2}},
+ {tag:"rust",flaw:"rust",preferred:"left",inspect:"主骨锈蚀 · 结构失效",why:"主骨锈断已无法修复，金属回收。",left:{env:.8,people:.5,trust:.2},right:{env:-.4,people:-.8,trust:-.1}}]},
+{id:"backpack",name:"旧背包",type:"backpack",tier:2,mode:"variant",variants:[
+ {tag:"good",preferred:"right",inspect:"拉链正常 · 面料完好",why:"完好的背包很适合捐给需要的人。",left:{env:.4,people:.1,trust:.1},right:{env:1.0,people:.8,trust:.2}},
+ {tag:"mold",flaw:"mold",preferred:"left",inspect:"内部霉变 · 不宜直接流通",why:"霉变会危害健康，不能直接送人。",left:{env:.6,people:.8,trust:.3},right:{env:-.3,people:-1.0,trust:-.2}}]},
+{id:"helmet",name:"安全帽",type:"helmet",tier:3,mode:"variant",variants:[
+ {tag:"safe",preferred:"right",inspect:"无裂纹 · 使用期仍有效",why:"在有效期内且无损伤，可以继续保护人。",left:{env:.3,people:.1,trust:.1},right:{env:.7,people:1.2,trust:.3}},
+ {tag:"crack",flaw:"crack",preferred:"left",inspect:"内部裂纹 · 防护性能下降",why:"有裂纹的安全帽关键时刻保护不了人。",left:{env:.5,people:1.4,trust:.5},right:{env:-.2,people:-1.7,trust:-.6}}]},
+{id:"solar",name:"旧太阳能板",type:"solar",tier:3,mode:"variant",variants:[
+ {tag:"works",preferred:"right",inspect:"输出效率 87% · 可继续使用",why:"87% 效率仍能发电很多年。",left:{env:.7,people:.1,trust:.1},right:{env:1.6,people:.4,trust:.2}},
+ {tag:"dead",flaw:"burn",preferred:"left",inspect:"电池片失效 · 需材料回收",why:"热斑烧毁的电池片要回收硅、银和玻璃。",left:{env:1.4,people:.2,trust:.2},right:{env:-.8,people:-.2,trust:-.2}}]},
+{id:"greenpack",name:"“绿色”包装",type:"package",tier:3,mode:"variant",variants:[
+ {tag:"verified",mark:"trace",preferred:"left",inspect:"来源可追踪 · 单一材料",why:"有溯源码的单一材料包装，放心回收。",left:{env:1.2,people:.1,trust:1.1},right:{env:.1,people:.1,trust:.2}},
+ {tag:"mixed",flaw:"claim",preferred:"right",inspect:"复合夹层 · “100%可回收”缺少依据",why:"标签夸大其词：复合夹层进不了常规回收，不如直接再用作缓冲材料。",left:{env:-.6,trust:-.8},right:{env:.5,people:.2,trust:1.3}}]},
+{id:"laptop",name:"旧笔记本电脑",type:"laptop",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"存储正常 · 主板可维修",why:"修一修就能给学生用，翻新价值很高。",left:{env:.6,people:.1,trust:.1},right:{env:1.5,people:.8,trust:.3}},
+ {tag:"dead",flaw:"burn",preferred:"left",inspect:"主板烧毁 · 稀有金属可回收",why:"主板烧毁后，回收金、钴等稀有金属。",left:{env:1.5,people:.2,trust:.3},right:{env:-.8,people:-.3,trust:-.2}}]},
+{id:"vest",name:"反光工作服",type:"vest",tier:3,mode:"variant",variants:[
+ {tag:"safe",preferred:"right",inspect:"反光层完整 · 可继续使用",why:"反光层完好，能继续保护夜班工人。",left:{env:.3,people:.1,trust:.1},right:{env:.5,people:1.2,trust:.3}},
+ {tag:"worn",flaw:"worn",preferred:"left",inspect:"防护层老化 · 不宜继续上岗",why:"反光层磨损，夜里司机看不见穿它的人。",left:{env:.4,people:1.5,trust:.5},right:{env:-.2,people:-1.8,trust:-.5}}]},
+{id:"powerbank",name:"充电宝",type:"powerbank",tier:3,mode:"variant",variants:[
+ {tag:"safe",preferred:"right",inspect:"电芯健康 · 外壳完整",why:"电芯健康，继续用很安全。",left:{env:.6,people:.1,trust:.1},right:{env:1.0,people:.5,trust:.2}},
+ {tag:"swollen",flaw:"bulge",preferred:"left",inspect:"电芯鼓包 · 存在热失控风险",why:"鼓包电芯随时可能热失控起火。",left:{env:1.2,people:1.5,trust:.4},right:{env:-1.0,people:-1.8,trust:-.4}}]},
+{id:"keyboard",name:"旧键盘",type:"keyboard",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"主板正常 · 少量按键可更换",why:"换几颗键帽就能用。",left:{env:.5,people:.1,trust:.1},right:{env:1.1,people:.6,trust:.2}},
+ {tag:"dead",flaw:"leak",preferred:"left",inspect:"进液腐蚀 · 电子件失效",why:"进液腐蚀后电路失效，按电子废物回收。",left:{env:1.0,people:.2,trust:.2},right:{env:-.5,people:-.5,trust:-.2}}]},
+{id:"kettle",name:"电热水壶",type:"kettle",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"温控正常 · 加热管可更换",why:"换根加热管就能继续烧水。",left:{env:.5,people:.1,trust:.1},right:{env:1.1,people:.6,trust:.2}},
+ {tag:"unsafe",flaw:"spark",preferred:"left",inspect:"漏电测试异常 · 不宜继续使用",why:"漏电的水壶可能伤人，不能再流通。",left:{env:.9,people:1.5,trust:.4},right:{env:-.4,people:-1.9,trust:-.4}}]},
+{id:"chair",name:"木椅",type:"chair",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"结构稳定 · 表面可翻新",why:"打磨上漆，又是一把好椅子。",left:{env:.4,people:.1,trust:.1},right:{env:1.0,people:.6,trust:.2}},
+ {tag:"rot",flaw:"rot",preferred:"left",inspect:"承重部位腐朽 · 结构不安全",why:"腐朽的椅腿随时会断，拆解回收木料。",left:{env:.7,people:.9,trust:.3},right:{env:-.3,people:-1.2,trust:-.2}}]},
+{id:"camera",name:"旧相机",type:"camera",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"镜头完好 · 快门可维修",why:"好镜头值得修，老相机还能再拍十年。",left:{env:.5,people:.1,trust:.1},right:{env:1.2,people:.7,trust:.2}},
+ {tag:"corrode",flaw:"rust",preferred:"left",inspect:"电池仓严重腐蚀 · 主板受损",why:"严重腐蚀，回收材料更合理。",left:{env:1.0,people:.3,trust:.2},right:{env:-.5,people:-.5,trust:-.2}}]},
+{id:"headphones",name:"旧耳机",type:"headphones",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"单侧线材断裂 · 可维修",why:"换根线就能用，别轻易扔。",left:{env:.4,people:.1,trust:.1},right:{env:1.0,people:.6,trust:.2}},
+ {tag:"dead",flaw:"leak",preferred:"left",inspect:"电池漏液 · 电子部件受损",why:"电池漏液有腐蚀性，需专业回收。",left:{env:.9,people:.8,trust:.3},right:{env:-.5,people:-1.0,trust:-.2}}]},
+{id:"pan",name:"不粘锅",type:"pan",tier:3,mode:"variant",variants:[
+ {tag:"good",preferred:"right",inspect:"涂层完整 · 可继续使用",why:"涂层完好，可以继续做饭。",left:{env:.3,people:.1,trust:.1},right:{env:.8,people:.7,trust:.2}},
+ {tag:"scratch",flaw:"scratch",preferred:"left",inspect:"涂层大面积破损 · 不宜继续使用",why:"涂层脱落会混进食物，锅体按金属回收。",left:{env:.6,people:1.0,trust:.3},right:{env:-.2,people:-1.3,trust:-.2}}]},
+{id:"fan",name:"小风扇",type:"fan",tier:3,mode:"variant",variants:[
+ {tag:"repair",preferred:"right",inspect:"电机正常 · 开关可更换",why:"只是开关坏了，修好继续吹。",left:{env:.5,people:.1,trust:.1},right:{env:1.0,people:.5,trust:.2}},
+ {tag:"burnt",flaw:"burn",preferred:"left",inspect:"电机烧毁 · 线圈可回收",why:"电机烧毁，回收里面的铜线圈。",left:{env:1.0,people:.3,trust:.2},right:{env:-.4,people:-.5,trust:-.2}}]}
+];
+/* 事件：没有标准答案，是短期得分与长期 ESG 之间的取舍 */
+const EVENTS=[
+{id:"overheat",name:"设备高温报警",icon:"🌡",desc:"传送带电机 92°C",leftLabel:"停机检修",rightLabel:"继续生产",leftText:"停机 3 秒 · 社会 +8",rightText:"+350 · 接下来 8 秒加速",left:{people:8,trust:2,timeCost:3},right:{people:-6,score:350,pressure:8},leftTone:"care"},
+{id:"audit",name:"供应商标签缺证明",icon:"🏷",desc:"“100%环保”无检测报告",leftLabel:"退回核验",rightLabel:"直接入线",leftText:"耗时 2 秒 · 治理 +9",rightText:"+300 · 治理 -7",left:{trust:9,timeCost:2},right:{trust:-7,score:300},leftTone:"care"},
+{id:"glove",name:"工友的手套破了",icon:"🧤",desc:"他说“没事，先干完”",leftLabel:"先换防护",rightLabel:"先干完",leftText:"耗时 2 秒 · 社会 +9",rightText:"+280 · 社会 -7",left:{people:9,timeCost:2},right:{people:-7,score:280},leftTone:"care"},
+{id:"landfill",name:"加急订单",icon:"📦",desc:"客户要求：整批直接填埋",leftLabel:"拒绝填埋",rightLabel:"接单",leftText:"环境 +8 · 治理 +3",rightText:"+400 · 环境 -9",left:{env:8,trust:3},right:{env:-9,score:400},leftTone:"care"},
+{id:"report",name:"月报回收率 61%",icon:"📊",desc:"主管：“写成 85% 吧”",leftLabel:"如实上报",rightLabel:"美化数据",leftText:"治理 +10",rightText:"+350 · 治理 -10",left:{trust:10},right:{trust:-10,score:350},leftTone:"care"},
+{id:"donate",name:"社区换物站来电",icon:"🤝",desc:"冬天到了，急需旧衣",leftLabel:"优先捐赠",rightLabel:"拆解卖料",leftText:"耗时 2 秒 · 社会 +9",rightText:"+300 · 社会 -5",left:{people:9,env:2,timeCost:2},right:{people:-5,score:300},leftTone:"care"}
+];
+const ALL_IDS=ITEM_DEFS.map(d=>d.id);
+
+/* ============================================================
+   游戏状态
+   ============================================================ */
+const SHIFT=75,RUSH=10;
+let state="menu",mode="classic",timeLeft=SHIFT,elapsed=0,score=0,streak=0,maxStreak=0,correct=0,wrong=0,missed=0,inspected=0,handled=0;
+let env=50,people=50,trust=50,worldTime=0,pressureT=0,factoryMood=0,skill=0;
+let eventPlan=[],eventLog=[],pendingEvent=null,recentIds=[],recentSides=[],mistakes=[],newUnlocks=[];
+let current=null,currentY=0,dragX=0,dragVis=0,fly=null,flyT=0,flyTotal=.26,spawnT=0,scanT=0;
+let pops=[],particles=[],swipeFx=[],rings=[],coach=null,banner=null,timePops=[];
+let shake=0,flash=0,flashColor="174,76,62",goldFlash=0,countT=0,endT=0,lastTickSec=99,firstHint={inspect:false,open:false};
+let tut=null; // 新手引导
+let pointer={down:false,id:null,sx:0,sy:0,x:0,y:0,moved:false,longTimer:null,t0:0,lastX:0,lastT:0,vx:0};
+let collection=new Set(store.get("seen",[]));
+let challenge=null;
+let lastResult=null;
+
+function multiplier(){if(streak>=16)return 4;if(streak>=10)return 3;if(streak>=5)return 2;return 1}
+function nextTier(){return streak<5?5:streak<10?10:streak<16?16:null}
+function rushing(){return state==="playing"&&!tut&&timeLeft<=RUSH}
+
+function instantiate(def){
+  const o={...def,uid:Math.random().toString(36).slice(2),inspected:false,spawnAt:elapsed};
+  if(def.mode==="variant"){const v=pick(def.variants);Object.assign(o,{preferred:v.preferred,inspect:v.inspect,why:v.why,left:v.left,right:v.right,variant:v.tag,flaw:v.flaw||null,mark:v.mark||null})}
+  return o;
+}
+function pickItem(){
+  const progress=elapsed/SHIFT,maxTier=progress<.16?1:(progress<.5?2:3);
+  let pool=ITEM_DEFS.filter(d=>d.tier<=maxTier&&!recentIds.includes(d.id));
+  if(progress>.5)pool=pool.concat(pool.filter(d=>d.tier===3)); // 后期更多难题
+  let picked=null;
+  for(let i=0;i<24;i++){
+    const c=instantiate(pick(pool)),last3=recentSides.slice(-3);
+    if(c.preferred&&last3.length===3&&last3.every(s=>s===c.preferred))continue;
+    picked=c;break;
+  }
+  if(!picked)picked=instantiate(pick(pool));
+  recentIds.push(picked.id);while(recentIds.length>4)recentIds.shift();
+  recentSides.push(picked.preferred||"open");while(recentSides.length>3)recentSides.shift();
+  return picked;
+}
+function spawnCurrent(){
+  if(pendingEvent){current={...pendingEvent,event:true,uid:"ev"+Math.random()};pendingEvent=null;sfx("event");vibe([20,40,20])}
+  else current=pickItem();
+  currentY=L.spawnY;dragX=0;dragVis=0;fly=null;flyT=0;spawnT=.22;scanT=0;
+  if(!tut&&current.mode==="variant"&&!firstHint.inspect&&elapsed>6){showBanner("看不准？按住屏幕检查","瑕疵很细微，检查还能 +治理",2.4);firstHint.inspect=true}
+  else if(!tut&&current.mode==="choice"&&!firstHint.open){showBanner("这件两边都对","选“再用”对社会更友好",2);firstHint.open=true}
+}
+function resetRun(){
+  rng=mode==="daily"?mulberry32(todayKey()*7+13):Math.random;
+  timeLeft=SHIFT;elapsed=0;score=0;streak=0;maxStreak=0;correct=0;wrong=0;missed=0;inspected=0;handled=0;
+  env=50;people=50;trust=50;pressureT=0;factoryMood=0;skill=0;
+  const evs=[...EVENTS];const chosen=[];for(let i=0;i<2;i++)chosen.push(evs.splice(Math.floor(rng()*evs.length),1)[0]);
+  eventPlan=[{at:22+rng()*6,ev:chosen[0]},{at:47+rng()*7,ev:chosen[1]}];
+  eventLog=[];pendingEvent=null;recentIds=[];recentSides=[];mistakes=[];newUnlocks=[];
+  current=null;fly=null;pops=[];particles=[];swipeFx=[];rings=[];coach=null;banner=null;timePops=[];
+  shake=0;flash=0;goldFlash=0;lastTickSec=99;firstHint={inspect:false,open:false};
+}
+function showBanner(t,s,d=1.6){banner={t,s,life:d,max:d}}
+function toastDom(t){const el=document.getElementById("toastDom");el.textContent=t;el.classList.add("show");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("show"),1800)}
+function addTime(dt){
+  timeLeft=clamp(timeLeft+dt,0,SHIFT);timePops.push({text:(dt>0?"+":"")+dt+"s",life:1,max:1,good:dt>0});
+}
+
+/* ============================================================
+   判定
+   ============================================================ */
+function applyEffects(e){if(!e)return;env=clamp(env+(e.env||0),0,100);people=clamp(people+(e.people||0),0,100);trust=clamp(trust+(e.trust||0),0,100)}
+function burst(x,y,good,n){
+  n=n||(good?14:9);
+  const cols=good?(multiplier()>=3?["#f1d08a","#ffe6a8","#fff3d0"]:["#d4b266","#a9d8a6","#efe0b4"]):["#a75b4d","#7d4a3e"];
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=rand(60,220);particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-60,life:rand(.35,.7),max:.7,size:rand(2,5),col:cols[i%cols.length]})}
+}
+function cardScreenX(){return W/2+dragX}
+function resolve(dir){
+  if(state!=="playing"||!current||fly)return;
+  if(tut){tutResolve(dir);return}
+  if(current.event){resolveEvent(dir);return}
+  const open=current.mode==="choice",good=open||dir===current.preferred,mult=multiplier(),x=cardScreenX(),y=currentY;
+  const travel=clamp((currentY-L.spawnY)/(L.missY-L.spawnY),0,1),quick=travel<.35;
+  if(good){
+    streak++;maxStreak=Math.max(maxStreak,streak);correct++;
+    const m2=multiplier();
+    let pts=(open?80:100)*m2+(current.inspected?30:0)+(quick?20:0);
+    if(rushing())pts*=2;
+    score+=pts;applyEffects(current[dir]);skill=clamp(skill+.08,-1,1);
+    pops.push({x,y:y-70*L.S,text:"+"+pts,sub:quick?"迅速":current.inspected?"细心":open?(dir==="right"?"再用更暖心":"两边都对"):"",life:.9,max:.9,good:true,big:m2>=3});
+    if(!collection.has(current.id)){collection.add(current.id);newUnlocks.push(current.id);store.set("seen",[...collection])}
+    if(streak===5||streak===10||streak===16){sfx("flow");vibe([10,30,15]);goldFlash=.5;rings.push({x:W/2,y:L.hudTop+28,r:10,life:.6,max:.6});showBanner(`FLOW ×${m2}`,streak===16?"满级！窗外的城市在发光":"连对加倍得分",1.2)}
+    else{sfx(open?"open":"good");vibe(m2>=3?12:7)}
+    burst(dir==="left"?W*.18:W*.82,y,true);
+  }else{
+    const best=current.preferred;
+    streak=0;wrong++;score=Math.max(0,score-50);applyEffects(current[dir]);skill=clamp(skill-.25,-1,1);addTime(-2);
+    mistakes.push({id:current.id,type:current.type,name:current.name,flaw:current.flaw,mark:current.mark,go:best,why:current.why});
+    coach={go:best,name:current.name,why:current.why,life:2.4,max:2.4};
+    pops.push({x,y:y-70*L.S,text:"-50",sub:"判断失误",life:.9,max:.9,good:false});
+    sfx("bad");vibe([30,40,30]);shake=9;flash=.16;flashColor="174,76,62";
+    burst(x,y,false);
+  }
+  swipeFx.push({dir,y,life:.28,max:.28,good});
+  handled++;fly=dir;flyT=flyTotal=good?.24:.34;sfx("whoosh");
+}
+function resolveEvent(dir){
+  const e=current[dir];applyEffects(e);
+  if(e.score){score+=e.score;pops.push({x:cardScreenX(),y:currentY-80,text:"+"+e.score,sub:"短期效率",life:1.1,max:1.1,good:true})}
+  if(e.timeCost)addTime(-e.timeCost);
+  if(e.pressure)pressureT=Math.max(pressureT,e.pressure);
+  eventLog.push({id:current.id,name:current.name,dir,care:dir==="left"});
+  showBanner(dir==="left"?current.leftLabel:current.rightLabel,dir==="left"?current.leftText:current.rightText,1.6);
+  if(dir==="left"){goldFlash=.25;skill=clamp(skill+.15,-1,1)}else{skill=clamp(skill-.1,-1,1)}
+  sfx("choose");vibe(14);handled++;fly=dir;flyT=flyTotal=.34;
+  swipeFx.push({dir,y:currentY,life:.3,max:.3,good:true});
+}
+function missCurrent(){
+  if(!current||fly)return;
+  if(current.event){
+    const e=current.right;applyEffects(e);score+=e.score||0;if(e.pressure)pressureT=e.pressure;
+    eventLog.push({id:current.id,name:current.name,dir:"right",care:false,auto:true});
+    showBanner("没有选择 = 默认继续",current.rightText,1.6);
+  }else{
+    streak=0;missed++;score=Math.max(0,score-30);env=clamp(env-1,0,100);skill=clamp(skill-.25,-1,1);addTime(-2);
+    mistakes.push({id:current.id,type:current.type,name:current.name,flaw:current.flaw,mark:current.mark,go:current.preferred,why:current.why,missed:true});
+    pops.push({x:W/2,y:L.missY,text:"漏过 -30",life:.9,max:.9,good:false});sfx("miss");vibe(25);flash=.1;flashColor="174,76,62";
+  }
+  handled++;fly="down";flyT=flyTotal=.22;
+}
+function inspectCurrent(){
+  if(state!=="playing"||!current||fly||current.event||current.inspected)return;
+  if(tut&&tut.step!==2){return}
+  current.inspected=true;scanT=2.4;
+  if(!tut){inspected++;trust=clamp(trust+.9,0,100);score+=10;pops.push({x:W/2,y:currentY-90*L.S,text:"检查 +10",sub:"治理 ↑",life:.8,max:.8,good:true})}
+  rings.push({x:cardScreenX(),y:currentY-12*L.S,r:30,life:.5,max:.5});
+  sfx("scan");vibe(10);
+  if(tut)tutAfterInspect();
+}
+
+/* ============================================================
+   新手引导（首局自动出现，可在首页重看）
+   ============================================================ */
+const TUT_STEPS=[
+  {id:"bottle",need:"left",title:"向左划 → 回收",sub:"空瓶、纸箱、电池：材料再生"},
+  {id:"shirt",need:"right",title:"向右划 → 再用",sub:"还能用的东西：延续它的生命"},
+  {id:"phone",tag:"swollen",need:"inspect",title:"按住屏幕 → 检查",sub:"看到侧面鼓起来了吗？"}
+];
+function startTutorial(){
+  mode="classic";resetRun();tut={step:0,t:0,wrongT:0};state="playing";showHud(true);spawnTutCard();musicStart();
+}
+function spawnTutCard(){
+  const s=TUT_STEPS[tut.step],def=ITEM_DEFS.find(d=>d.id===s.id);
+  current=instantiate(def);
+  if(s.tag){const v=def.variants.find(v=>v.tag===s.tag);Object.assign(current,{preferred:v.preferred,inspect:v.inspect,why:v.why,left:v.left,right:v.right,variant:v.tag,flaw:v.flaw})}
+  currentY=L.spawnY+30*L.S;dragX=0;fly=null;spawnT=.22;scanT=0;tut.t=0;
+}
+function tutResolve(dir){
+  const s=TUT_STEPS[tut.step];
+  const need=s.need==="inspect"?(current.inspected?"left":"inspect"):s.need;
+  if(dir!==need){tut.wrongT=.5;dragX=0;sfx("miss");vibe(20);shake=4;
+    if(need==="inspect")showBanner("先别急，按住屏幕检查一下","长按 0.4 秒",1.4);
+    else showBanner(need==="left"?"这件该往左（回收）":"这件该往右（再用）",s.sub,1.4);
+    return}
+  sfx("good");vibe(8);burst(dir==="left"?W*.18:W*.82,currentY,true);fly=dir;flyT=flyTotal=.26;
+  swipeFx.push({dir,y:currentY,life:.28,max:.28,good:true});
+  collection.add(current.id);store.set("seen",[...collection]);
+  tut.advance=true;
+}
+function tutAfterInspect(){showBanner("电池鼓包 → 向左回收","瑕疵往往很细微，拿不准就检查",3)}
+function tutUpdate(dt){
+  tut.t+=dt;tut.wrongT=Math.max(0,tut.wrongT-dt);
+  if(fly){flyT-=dt;if(flyT<=0){fly=null;if(tut.advance){tut.advance=false;tut.step++;
+    if(tut.step>=TUT_STEPS.length){store.set("tut",true);tut=null;current=null;beginCountdown();return}
+    spawnTutCard()}}}
+}
+
+/* ============================================================
+   流程
+   ============================================================ */
+function showHud(v){pauseBtn.classList.toggle("show",v)}
+function startRun(m){
+  ensureAudio();sfx("ui");mode=m||"classic";
+  if(!store.get("tut",false)){startTutorial();overlay.classList.remove("show");return}
+  resetRun();overlay.classList.remove("show");beginCountdown();
+}
+function beginCountdown(){
+  state="countdown";countT=2.4;lastTickSec=99;current=null;showHud(true);musicStart();
+  overlay.classList.remove("show");
+}
+function update(dt){
+  worldTime+=dt;shake=Math.max(0,shake-30*dt);flash=Math.max(0,flash-dt);goldFlash=Math.max(0,goldFlash-dt);spawnT=Math.max(0,spawnT-dt);
+  factoryMood+=(clamp(skill+(env+people+trust-150)/150,-1,1)-factoryMood)*(1-Math.pow(.25,dt));
+  skill*=Math.pow(.92,dt);
+  for(const p of pops){p.life-=dt;p.y-=38*dt}pops=pops.filter(p=>p.life>0);
+  for(const p of timePops){p.life-=dt}timePops=timePops.filter(p=>p.life>0);
+  for(const p of particles){p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.vx*=Math.pow(.3,dt)}particles=particles.filter(p=>p.life>0);
+  for(const s of swipeFx)s.life-=dt;swipeFx=swipeFx.filter(s=>s.life>0);
+  for(const r of rings){r.life-=dt;r.r+=260*dt}rings=rings.filter(r=>r.life>0);
+  if(coach){coach.life-=dt;if(coach.life<=0)coach=null}
+  if(banner){banner.life-=dt;if(banner.life<=0)banner=null}
+  dragVis+=(dragX-dragVis)*(1-Math.pow(.0001,dt));
+  if(!pointer.down&&!fly)dragX*=Math.pow(.0008,dt);
+  if(state==="countdown"){
+    const before=Math.ceil(countT/.8);countT-=dt;const after=Math.ceil(countT/.8);
+    if(after!==before&&after>0)sfx("count");
+    if(countT<=0){state="playing";sfx("go");vibe(15);spawnCurrent()}
+    return;
+  }
+  if(state==="ending"){endT-=dt;if(endT<=0)showResult();return}
+  if(state!=="playing")return;
+  if(tut){tutUpdate(dt);return}
+  timeLeft-=dt;elapsed=SHIFT-timeLeft;pressureT=Math.max(0,pressureT-dt);
+  const sec=Math.ceil(timeLeft);
+  if(sec<=RUSH&&sec!==lastTickSec){lastTickSec=sec;if(sec>0){sfx("tick");if(sec===RUSH){showBanner("最后冲刺 · 得分 ×2","冲！",1.4);vibe([15,30,15])}}}
+  if(timeLeft<=0){timeLeft=0;endShift();return}
+  for(const p of eventPlan)if(!p.done&&elapsed>=p.at&&!pendingEvent){pendingEvent=p.ev;p.done=true}
+  if(scanT>0)scanT-=dt;
+  if(fly){flyT-=dt;if(flyT<=0)spawnCurrent();return}
+  const prog=clamp(elapsed/SHIFT,0,1),dur=lerp(5.4,2.55,Math.pow(prog,.85));
+  const speed=(L.missY-L.spawnY)/dur;
+  const pressure=pressureT>0?1.3:1,scanSlow=scanT>0?.35:1,eventSlow=current&&current.event?.42:1;
+  const holdSlow=pointer.down&&!pointer.moved?.5:1,flowBoost=1+Math.min(streak,20)*.008;
+  currentY+=speed*pressure*scanSlow*eventSlow*holdSlow*flowBoost*dt;
+  if(currentY>L.missY)missCurrent();
+}
+function endShift(){
+  state="ending";endT=1.3;sfx("end");vibe([20,40,60]);musicStop();showHud(false);
+  clearLong();pointer.down=false;
+}
+
+/* ============================================================
+   结算
+   ============================================================ */
+function computeResult(){
+  const total=correct+wrong+missed,acc=total?correct/total:0;
+  const medals=[];
+  if(env>=70)medals.push({k:"E",name:"绿色勋章",desc:"环境 ≥ 70",pts:300});
+  if(people>=70)medals.push({k:"S",name:"人本勋章",desc:"社会 ≥ 70",pts:300});
+  if(trust>=70)medals.push({k:"G",name:"诚信勋章",desc:"治理 ≥ 70",pts:300});
+  if(wrong+missed===0&&total>=12)medals.push({k:"P",name:"零失误",desc:"全班无失误",pts:500});
+  const bonus=medals.reduce((a,m)=>a+m.pts,0),final=score+bonus;
+  const esgAvg=(env+people+trust)/3;
+  let rank="D";
+  if(final>=7000&&acc>=.9&&medals.length>=3)rank="S";else if(final>=5000&&acc>=.8)rank="A";else if(final>=3200)rank="B";else if(final>=1600)rank="C";
+  const rankName={S:"夜班传奇",A:"城市守护者",B:"熟练分拣员",C:"见习夜班员",D:"刚来的新人"}[rank];
+  return{base:score,bonus,final,medals,acc,total,rank,rankName,esgAvg,city:citySummary()};
+}
+function citySummary(){
+  const avg=(env+people+trust)/3;let title="仍在生长的城市",tag="🌱";
+  if(env>=70&&people>=70&&trust>=70){title="会呼吸的城市";tag="🌳"}
+  else if(env>=72&&people<55){title="绿色但匆忙的城市";tag="🍃"}
+  else if(people>=72&&trust>=65){title="彼此照顾的城市";tag="🏮"}
+  else if(env>=70&&trust>=70){title="清澈透明的城市";tag="💧"}
+  else if(trust<40){title="灯很亮，但标签太多";tag="🏷"}
+  else if(people<40){title="运行很快，却有些疲惫";tag="🌫"}
+  else if(env<40){title="繁忙而沉重的城市";tag="🏭"}
+  else if(avg>=62){title="越来越平衡的城市";tag="⚖️"}
+  const l1=env>=65?"很多东西没有被浪费。":env<45?"资源流转得很快，但代价也留在了远处。":"资源大多找到了合适的去处。";
+  const l2=people>=65?"这里的人被认真地考虑过。":people<45?"这座城市跑得很快，但它也需要休息。":"效率和人的感受仍在拉扯。";
+  const l3=trust>=65?"你愿意花一点时间确认事实。":trust<45?"有些标签，你选择直接相信。":"你偶尔停下来确认，也偶尔相信经验。";
+  return{title,tag,l1,l2,l3};
+}
+function showResult(){
+  state="result";showHud(false);
+  const R=computeResult();lastResult=R;
+  const bestKey=mode==="daily"?"daily_"+todayKey():"best";
+  const prevBest=store.get(bestKey,0),isBest=R.final>prevBest&&R.final>0;
+  if(isBest)store.set(bestKey,R.final);
+  if(maxStreak>store.get("flow",0))store.set("flow",maxStreak);
+  store.set("runs",store.get("runs",0)+1);
+  const ranks="DCBAS";const pr=store.get("bestRank","D");if(ranks.indexOf(R.rank)>ranks.indexOf(pr))store.set("bestRank",R.rank);
+  const beatFriend=challenge&&R.final>challenge.score;
+  const uniqMist=[];const seen=new Set();for(const m of mistakes){const k=m.id+(m.flaw||"");if(!seen.has(k)){seen.add(k);uniqMist.push(m)}}
+  const care=eventLog.filter(e=>e.care).length;
+  panel.innerHTML=`
+    <div class="kicker">${mode==="daily"?`今日挑战 · 第 ${dailyNo()} 期`:"夜班报告"} · ${new Date().toLocaleDateString("zh-CN")}</div>
+    <div class="rankWrap">
+      <div class="rank ${R.rank}">${R.rank}</div>
+      <div class="scoreBox"><div class="scoreHero" id="scoreNum">0</div><div class="scoreCap">${R.rankName}</div>${isBest?`<span class="badge">新纪录</span>`:""}</div>
+    </div>
+    ${challenge?`<div class="challenge" style="margin-top:14px">${beatFriend?`<b>你赢了！</b> 好友 ${challenge.score} 分，你多了 ${R.final-challenge.score} 分。把这一局发回去吧。`:`<b>还差 ${challenge.score-R.final} 分</b>，好友拿了 ${challenge.score} 分。再来一班？`}</div>`:""}
+    <div class="breakdown">
+      <div style="animation-delay:.1s"><span>分拣得分</span><b>${R.base}</b></div>
+      ${R.medals.map((m,i)=>`<div class="medal" style="animation-delay:${.3+i*.18}s"><span>${m.name} · ${m.desc}</span><b>+${m.pts}</b></div>`).join("")}
+      ${R.medals.length?"":`<div style="animation-delay:.3s;color:#77777d"><span>任一 ESG 指标 ≥ 70 即可获得勋章 +300</span><b style="color:#77777d">—</b></div>`}
+    </div>
+    <div class="statGrid four">
+      <div class="stat">正确率<strong>${Math.round(R.acc*100)}%</strong></div>
+      <div class="stat">最高 FLOW<strong>${maxStreak}</strong></div>
+      <div class="stat">处理<strong>${correct+wrong+missed}</strong></div>
+      <div class="stat">检查<strong>${inspected}</strong></div>
+    </div>
+    <div class="esg">
+      ${esgRow("E 环境",env,"#9fd0a0")}${esgRow("S 社会",people,"#e8c789")}${esgRow("G 治理",trust,"#9cc3d6")}
+    </div>
+    <div class="cityLine"><b>${R.city.tag} ${R.city.title}</b>${R.city.l1}<br>${R.city.l2}<br>${R.city.l3}${eventLog.length?`<br><span style="color:#77777d">两次抉择里，你 ${care?`有 ${care} 次选择了停下来。`:"都选择了效率。"}</span>`:""}</div>
+    ${uniqMist.length?`<div class="review"><h3>复盘 · 下次就知道了</h3>${uniqMist.slice(0,4).map(m=>`<div class="rv"><img src="${iconURL(m.type,m.flaw,m.mark)}" alt=""><div><b>${esc(m.name)}</b><span class="go ${m.go==="left"?"l":"r"}">${m.go==="left"?"← 回收":"再用 →"}</span>${m.missed?`<span style="color:#77777d;font-size:10px"> 漏过</span>`:""}<br>${esc(m.why||"")}</div></div>`).join("")}</div>`:""}
+    ${newUnlocks.length?`<div class="tip">图鉴新收录 ${newUnlocks.length} 件 · 共 ${collection.size}/${ALL_IDS.length}</div>`:""}
+    <button class="btn gold tall" style="width:100%;margin-top:6px" data-act="share">生成战报 · 发给朋友<small>看看谁的城市更会呼吸</small></button>
+    <div class="row">
+      <button class="btn primary" data-act="again">再来一班</button>
+      <button class="btn" data-act="menu">首页</button>
+    </div>`;
+  overlay.classList.add("show");panel.scrollTop=0;bindPanel();
+  countUp(document.getElementById("scoreNum"),R.final,900);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>panel.querySelectorAll(".bar i").forEach(b=>b.style.width=b.dataset.w)));
+  R.medals.forEach((m,i)=>setTimeout(()=>sfx("medal"),300+i*180));
+}
+function esgRow(label,v,col){return`<div class="esgRow">${label}<div class="bar"><i data-w="${Math.round(v)}%" style="background:${col}"></i><s></s></div><span>${Math.round(v)}</span></div>`}
+function countUp(el,to,ms){const t0=performance.now();const f=now=>{const t=clamp((now-t0)/ms,0,1);el.textContent=Math.round(to*easeOut(t));if(t<1)requestAnimationFrame(f)};requestAnimationFrame(f)}
+
+/* ============================================================
+   首页 / 暂停 / 图鉴 / 设置
+   ============================================================ */
+function parseChallenge(){
+  try{const q=new URLSearchParams(location.search);const vs=parseInt(q.get("vs"));if(vs>0&&vs<100000){challenge={score:vs,rank:(q.get("r")||"").replace(/[^SABCD]/g,"").slice(0,1),city:(q.get("c")||"").slice(0,16),daily:q.get("d")===String(todayKey())}}}catch(_){}
+}
+function showMenu(){
+  state="menu";showHud(false);musicStop();overlay.classList.add("show");
+  const best=store.get("best",0),dbest=store.get("daily_"+todayKey(),0),flow=store.get("flow",0);
+  panel.innerHTML=`
+    <div class="kicker">75 SEC · NIGHT SHIFT · ESG</div>
+    <canvas class="heroArt" id="heroArt"></canvas>
+    <h1>第二次生命</h1>
+    <div class="sub">一件物品，一次选择。<br>你的每个判断，都在改变窗外那座城市。</div>
+    ${challenge?`<div class="challenge"><b>好友向你发起挑战</b><br>TA 在${challenge.daily?"今日挑战":"夜班"}拿了 <b>${challenge.score}</b> 分${challenge.rank?`（${challenge.rank} 级）`:""}${challenge.city?`，城市成了「${esc(challenge.city)}」`:""}。你能超过吗？</div>`:""}
+    <div class="ruleRow">
+      <div class="rule"><b>←</b><span>回收</span><em>材料再生</em></div>
+      <div class="rule"><b>◉</b><span>按住检查</span><em>看清瑕疵</em></div>
+      <div class="rule"><b>→</b><span>再用</span><em>延续生命</em></div>
+    </div>
+    <button class="btn primary tall" style="width:100%" data-act="${challenge&&challenge.daily?"daily":"start"}">${challenge?"接受挑战":"开始夜班"}<small>${challenge&&challenge.daily?"今日挑战 · 和好友同一批物品":"75 秒 · 最高 "+(best||"—")}</small></button>
+    <div class="row">
+      <button class="btn tall" data-act="${challenge&&challenge.daily?"start":"daily"}">${challenge&&challenge.daily?"普通夜班":"今日挑战"}<small>${challenge&&challenge.daily?"最高 "+(best||"—"):`第 ${dailyNo()} 期 · ${dbest?dbest+" 分":"人人同题"}`}</small></button>
+      <button class="btn tall" data-act="dex">图鉴<small>${collection.size}/${ALL_IDS.length}</small></button>
+    </div>
+    <div class="row">
+      <button class="btn ghost" data-act="tut">玩法教学</button>
+      <button class="btn ghost" data-act="settings">设置</button>
+    </div>
+    <div class="mini">最高 FLOW ${flow||"—"} · 最佳评级 ${store.get("runs",0)?store.get("bestRank","D"):"—"} · 已上岗 ${store.get("runs",0)} 班</div>`;
+  bindPanel();drawHero();
+}
+function drawHero(){
+  const c=document.getElementById("heroArt");if(!c)return;
+  const w=c.clientWidth,h=c.clientHeight,d=Math.min(2,DPR);c.width=w*d;c.height=h*d;const x=c.getContext("2d");x.scale(d,d);
+  const t0=performance.now();
+  const frame=now=>{
+    if(!document.body.contains(c)||state!=="menu")return;
+    const t=(now-t0)/1000;x.clearRect(0,0,w,h);
+    const prev=ctx;ctx=x;
+    // 小传送带 + 漂浮的物品
+    const types=["bottle","shirt","phone","can","jar","solar","book","helmet"];
+    for(let i=0;i<5;i++){
+      const ty=types[(i+Math.floor(t/2.2))%types.length];
+      const px=w/2+(i-2)*Math.min(84,w*.22),py=h*.5+Math.sin(t*1.6+i)*5,s=i===2?1:.68;
+      ctx.save();ctx.translate(px,py);ctx.scale(s,s);ctx.globalAlpha=i===2?1:.55;
+      ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=18;ctx.shadowOffsetY=8;rr(-44,-44,88,88,24,"rgba(244,244,246,.96)",null);ctx.shadowColor="transparent";
+      drawIcon(ty,0,0,1);ctx.restore();
+    }
+    ctx.globalAlpha=1;ctx=prev;
+    requestAnimationFrame(frame);
+  };requestAnimationFrame(frame);
+}
+function showPause(){
+  if(state!=="playing"&&state!=="countdown")return;
+  state="paused:"+state;musicStop();showHud(false);clearLong();pointer.down=false;dragX=0;
+  panel.innerHTML=`<div class="kicker">已暂停</div><h2>夜班还没结束</h2><div class="sub">剩余 ${Math.ceil(timeLeft)} 秒 · 得分 ${score}</div>
+    ${settingsHTML()}
+    <div class="btns" style="margin-top:14px"><button class="btn primary" data-act="resume">继续</button><button class="btn" data-act="quit">放弃本班</button></div>`;
+  overlay.classList.add("show");bindPanel();
+}
+function settingsHTML(){
+  return`<div style="text-align:left;margin-top:8px">
+    <div class="toggle">音效<button class="sw ${muted?"":"on"}" data-act="tMute" aria-label="音效"></button></div>
+    <div class="toggle">背景音乐<button class="sw ${musicOn?"on":""}" data-act="tMusic" aria-label="音乐"></button></div>
+    <div class="toggle">震动反馈<button class="sw ${hapticOn?"on":""}" data-act="tHaptic" aria-label="震动"></button></div></div>`;
+}
+function showSettings(){
+  panel.innerHTML=`<div class="kicker">设置</div><h2>夜班准备</h2>${settingsHTML()}
+  <div class="mini" style="text-align:left">玩法提示<br>· 越早做出判断，得分越高（“迅速”+20）<br>· 连续答对进入 FLOW，最高 ×4<br>· 按住屏幕能检查物品，传送带也会变慢<br>· 结算时 E/S/G 任意一项 ≥ 70 可得勋章 +300<br>· 最后 10 秒冲刺，得分翻倍</div>
+  <div class="btns" style="margin-top:14px"><button class="btn primary" data-act="menu">完成</button></div>`;bindPanel();
+}
+function showDex(){
+  const grid=ITEM_DEFS.map(d=>{const on=collection.has(d.id);return`<div class="cell ${on?"":"lock"}" data-id="${d.id}"><img src="${iconURL(d.type)}" alt=""><div class="n">${on?esc(d.name):"？"}</div></div>`}).join("");
+  panel.innerHTML=`<div class="kicker">物品图鉴</div><h2>它们的第二次生命</h2>
+    <div class="progress"><i style="width:${collection.size/ALL_IDS.length*100}%"></i></div><div class="tip">已收录 ${collection.size} / ${ALL_IDS.length} · 正确处理一次即可解锁</div>
+    <div class="info" id="dexInfo">点一件物品，看看它该去哪。</div>
+    <div class="grid">${grid}</div>
+    <div class="btns"><button class="btn primary" data-act="menu">返回</button></div>`;
+  bindPanel();
+  panel.querySelectorAll(".cell").forEach(c=>c.onclick=()=>{
+    sfx("ui");panel.querySelectorAll(".cell").forEach(x=>x.classList.remove("on"));c.classList.add("on");
+    const d=ITEM_DEFS.find(x=>x.id===c.dataset.id),info=document.getElementById("dexInfo");
+    if(!collection.has(d.id)){info.innerHTML=`<b>？？？</b><br>在夜班中正确处理它来解锁。`;return}
+    if(d.mode==="variant")info.innerHTML=`<b>${esc(d.name)}</b><br>${d.variants.map(v=>`<span class="go ${v.preferred==="left"?"l":"r"}" style="padding:1px 7px;border-radius:99px;font-size:10px;font-weight:800">${v.preferred==="left"?"← 回收":"再用 →"}</span> ${esc(v.inspect)}`).join("<br>")}`;
+    else info.innerHTML=`<b>${esc(d.name)}</b> <span class="go ${d.preferred==="left"?"l":d.preferred==="right"?"r":"l"}" style="padding:1px 7px;border-radius:99px;font-size:10px;font-weight:800">${d.preferred==="left"?"← 回收":d.preferred==="right"?"再用 →":"两边都对"}</span><br>${esc(d.why)}`;
+  });
+}
+function bindPanel(){
+  panel.querySelectorAll("[data-act]").forEach(b=>b.onclick=e=>{
+    e.stopPropagation();const a=b.dataset.act;ensureAudio();
+    if(a==="start"||a==="again")startRun(a==="again"?mode:"classic");
+    else if(a==="daily")startRun("daily");
+    else if(a==="menu"){sfx("ui");showMenu()}
+    else if(a==="tut"){overlay.classList.remove("show");store.set("tut",false);startRun("classic")}
+    else if(a==="dex"){sfx("ui");showDex()}
+    else if(a==="settings"){sfx("ui");showSettings()}
+    else if(a==="resume"){const prev=state.split(":")[1]||"playing";state=prev;overlay.classList.remove("show");showHud(true);musicStart();last=performance.now()}
+    else if(a==="quit"){tut=null;showMenu()}
+    else if(a==="share")openShare();
+    else if(a==="closeShare")showResult2();
+    else if(a==="sysShare")systemShare();
+    else if(a==="copy")copyLink();
+    else if(a==="tMute"){setMuted(!muted);b.classList.toggle("on",!muted);sfx("ui")}
+    else if(a==="tMusic"){setMusic(!musicOn);b.classList.toggle("on",musicOn);sfx("ui")}
+    else if(a==="tHaptic"){hapticOn=!hapticOn;store.set("haptic",hapticOn);b.classList.toggle("on",hapticOn);vibe(15)}
+  });
+}
+let resultHTML="";
+function showResult2(){panel.innerHTML=resultHTML;bindPanel();panel.querySelectorAll(".bar i").forEach(b=>b.style.width=b.dataset.w);const n=document.getElementById("scoreNum");if(n&&lastResult)n.textContent=lastResult.final}
+
+/* ============================================================
+   分享：战报图片 + 挑战链接
+   ============================================================ */
+let shareBlob=null,shareURL="";
+function challengeLink(){
+  const R=lastResult;let base=location.href.split("?")[0].split("#")[0];
+  if(!/^https?:/.test(base))return "";
+  const q=new URLSearchParams({vs:R.final,r:R.rank,c:R.city.title});if(mode==="daily")q.set("d",todayKey());
+  return base+"?"+q.toString();
+}
+function shareText(){
+  const R=lastResult,link=challengeLink();
+  return `我在《第二次生命》${mode==="daily"?`今日挑战第${dailyNo()}期`:"75秒夜班"}拿了 ${R.rank} 级 ${R.final} 分，窗外成了「${R.city.title}」。你能超过我吗？${link?" "+link:""}`;
+}
+function openShare(){
+  sfx("ui");resultHTML=panel.innerHTML;
+  const cv=renderShareCard();shareURL=cv.toDataURL("image/png");
+  try{cv.toBlob(b=>shareBlob=b,"image/png")}catch(_){}
+  const canFile=!!(navigator.canShare&&window.File);
+  panel.innerHTML=`<div class="kicker">我的夜班战报</div>
+    <img class="shareImg" src="${shareURL}" alt="战报">
+    <div class="tip">长按图片保存或直接发送给朋友</div>
+    ${navigator.share?`<button class="btn primary" style="width:100%" data-act="sysShare">${canFile?"分享图片":"分享"}</button>`:""}
+    <div class="row"><button class="btn" data-act="copy">复制挑战文案</button><button class="btn" data-act="closeShare">返回</button></div>`;
+  bindPanel();
+}
+async function systemShare(){
+  const text=shareText(),url=challengeLink();
+  try{
+    if(shareBlob&&navigator.canShare){const f=new File([shareBlob],"second-life.png",{type:"image/png"});if(navigator.canShare({files:[f]})){await navigator.share({files:[f],text,title:"第二次生命"});return}}
+    await navigator.share({title:"第二次生命 · 75秒夜班",text,url:url||undefined});
+  }catch(e){if(e&&e.name!=="AbortError")copyLink()}
+}
+function copyLink(){
+  const t=shareText();
+  const done=()=>toastDom("已复制，粘贴给朋友吧");
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t,done));else fallbackCopy(t,done);
+}
+function fallbackCopy(t,done){const ta=document.createElement("textarea");ta.value=t;ta.style.cssText="position:fixed;opacity:0;top:0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(_){toastDom("复制失败，请手动复制")}ta.remove()}
+function renderShareCard(){
+  const R=lastResult,w=750,h=1200,cv=document.createElement("canvas");cv.width=w;cv.height=h;const x=cv.getContext("2d");
+  const prev=ctx;ctx=x;
+  const g=x.createLinearGradient(0,0,0,h);g.addColorStop(0,"#1d1c1a");g.addColorStop(1,"#0c0c0d");x.fillStyle=g;x.fillRect(0,0,w,h);
+  // 城市窗景
+  const en=env/100,pn=people/100,tn=trust/100,good=clamp((env+people+trust-150)/90,0,1),bad=clamp((150-(env+people+trust))/60,0,1);
+  x.save();rr(48,48,w-96,470,36,null,null);x.clip();
+  const sky=x.createLinearGradient(0,48,0,518);
+  sky.addColorStop(0,`rgb(${Math.round(40+tn*50+good*30)},${Math.round(48+en*60+good*30)},${Math.round(64+en*40+good*30)})`);
+  sky.addColorStop(1,`rgb(${Math.round(140+en*50)},${Math.round(110+pn*40)},${Math.round(80+good*30)})`);
+  x.fillStyle=sky;x.fillRect(48,48,w-96,470);
+  x.fillStyle=`rgba(255,214,130,${.35+good*.5})`;x.beginPath();x.arc(w*.72,170,48+good*14,0,7);x.fill();
+  for(let i=0;i<14;i++){const bw=34+(i%3)*12,bh=110+((i*37)%7)*26,bx=60+i*48;x.fillStyle=`rgba(${30-bad*8},${36-bad*8},${42-bad*8},.92)`;x.fillRect(bx,430-bh,bw,bh);
+    for(let r=0;r<Math.floor(bh/26);r++)for(let c2=0;c2<2;c2++){const lit=((i+r+c2)%3)!==0||pn>.67;x.fillStyle=lit?`rgba(240,200,110,${.25+.6*pn})`:"rgba(10,12,14,.5)";x.fillRect(bx+7+c2*(bw-18),430-bh+12+r*24,5,8)}}
+  x.fillStyle=`rgba(82,150,160,${.25+en*.4})`;x.fillRect(48,430,w-96,40);
+  const trees=Math.floor(3+en*10+good*6);for(let i=0;i<trees;i++){const tx=70+i*(w-140)/Math.max(1,trees-1);x.fillStyle=`rgba(${70},${120+good*50},${80},.9)`;x.beginPath();x.arc(tx,470,12+good*6,0,7);x.fill();x.fillStyle="#4a3828";x.fillRect(tx-2,476,4,16)}
+  x.fillStyle="#2a2723";x.fillRect(48,492,w-96,30);
+  if(bad>0){x.fillStyle=`rgba(20,20,18,${bad*.45})`;x.fillRect(48,48,w-96,470)}
+  x.restore();
+  x.strokeStyle="rgba(255,255,255,.12)";x.lineWidth=2;rr(48,48,w-96,470,36,null,null);x.stroke();
+  // 标题
+  x.textAlign="left";x.fillStyle="#8e8e93";x.font=font(700,22);x.fillText((mode==="daily"?`今日挑战 · 第 ${dailyNo()} 期`:"75 秒夜班报告")+"  ·  "+new Date().toLocaleDateString("zh-CN"),56,578);
+  x.fillStyle="#f5f5f7";x.font=font(800,58);x.fillText(R.city.title,56,650);
+  // 评级 + 分数
+  const rc={S:"#f1d08a",A:"#a9d8a6",B:"#9cc3d6",C:"#c9b8a0",D:"#a09a96"}[R.rank];
+  x.strokeStyle=rc;x.lineWidth=5;rr(56,690,150,150,40,`${rc}22`,null);x.stroke();
+  x.fillStyle=rc;x.font=font(900,104);x.textAlign="center";x.fillText(R.rank,131,805);
+  x.textAlign="left";x.fillStyle="#f5f5f7";x.font=font(800,96);x.fillText(String(R.final),236,790);
+  x.fillStyle="#a1a1a6";x.font=font(650,26);x.fillText(`${R.rankName} · 正确率 ${Math.round(R.acc*100)}% · FLOW ${maxStreak}`,240,834);
+  // ESG
+  const rows=[["E 环境",env,"#9fd0a0"],["S 社会",people,"#e8c789"],["G 治理",trust,"#9cc3d6"]];
+  rows.forEach((r,i)=>{const yy=900+i*58;x.fillStyle="#c7c7cc";x.font=font(700,26);x.fillText(r[0],56,yy+10);
+    rr(176,yy-6,440,18,9,"rgba(255,255,255,.08)",null);rr(176,yy-6,Math.max(18,440*r[1]/100),18,9,r[2],null);
+    x.fillStyle="rgba(255,255,255,.5)";x.fillRect(176+440*.7,yy-12,3,30);
+    x.fillStyle="#f5f5f7";x.textAlign="right";x.fillText(String(Math.round(r[1])),w-56,yy+10);x.textAlign="left"});
+  // 底部
+  x.fillStyle="rgba(255,255,255,.08)";x.fillRect(56,1080,w-112,2);
+  x.fillStyle="#f5f5f7";x.font=font(800,34);x.fillText("第二次生命",56,1136);
+  x.fillStyle="#8e8e93";x.font=font(600,22);x.fillText("左划回收 · 右划再用 · 你能超过我吗？",56,1170);
+  x.textAlign="right";x.fillStyle="#e8c789";x.font=font(800,24);x.fillText(R.medals.length?R.medals.map(m=>m.name).join(" · "):"来挑战我",w-56,1136);
+  x.textAlign="left";
+  ctx=prev;return cv;
+}
+
+/* ============================================================
+   绘制
+   ============================================================ */
+function rr(x,y,w,h,r,fill,stroke){
+  r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+  if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1;ctx.stroke()}
+}
+function drawBackground(){
+  const good=clamp(factoryMood,0,1),bad=clamp(-factoryMood,0,1),fever=multiplier()>=4&&state==="playing"?1:0;
+  const en=env/100,pn=people/100,tn=trust/100;
+  const bR=Math.round(32+good*20-bad*12),bG=Math.round(31+good*24-bad*14),bB=Math.round(30+good*16-bad*12);
+  const wall=ctx.createLinearGradient(0,0,0,H);
+  wall.addColorStop(0,`rgb(${bR},${bG},${bB})`);wall.addColorStop(.62,`rgb(${Math.max(16,bR-9)},${Math.max(15,bG-10)},${Math.max(14,bB-10)})`);wall.addColorStop(1,"#141210");
+  ctx.fillStyle=wall;ctx.fillRect(0,0,W,H);
+  const wx=W*.05,wy=L.hudBottom-8,ww=W*.9,wh=Math.max(120,H*.56-wy);
+  rr(wx,wy,ww,wh,14,"rgba(13,16,17,.54)","rgba(188,178,151,.13)");
+  const clarity=clamp(.3+good*.6-bad*.18,.1,.95);
+  ctx.save();ctx.beginPath();ctx.rect(wx+3,wy+3,ww-6,wh-6);ctx.clip();
+  const sky=ctx.createLinearGradient(0,wy,0,wy+wh);
+  sky.addColorStop(0,`rgba(${Math.round(55+tn*44+good*25)},${Math.round(62+en*52+good*28)},${Math.round(76+en*36+good*18)},${clarity})`);
+  sky.addColorStop(1,`rgba(${Math.round(120+en*55)},${Math.round(96+pn*45)},${Math.round(70+good*22)},${clarity})`);
+  ctx.fillStyle=sky;ctx.fillRect(wx,wy,ww,wh);
+  // 星星（治理高 → 天空更清透）
+  for(let i=0;i<18;i++){const sx=wx+((i*97)%ww),sy=wy+8+((i*53)%(wh*.4));ctx.fillStyle=`rgba(255,250,230,${(.1+tn*.5)*(.5+.5*Math.sin(worldTime*2+i))*clarity})`;ctx.fillRect(sx,sy,1.5,1.5)}
+  ctx.fillStyle=`rgba(239,193,103,${.16+good*.5})`;ctx.beginPath();ctx.arc(W*.74,wy+wh*.22,22+good*10,0,Math.PI*2);ctx.fill();
+  const baseY=wy+wh*.84;
+  for(let i=0;i<13;i++){
+    const bw=W*(.043+(i%3)*.011),bh=wh*(.16+((i*29)%7)*.035),x=W*.07+i*W*.068;
+    ctx.fillStyle=`rgba(${Math.round(39-bad*9)},${Math.round(43-bad*10)},${Math.round(47-bad*10)},${.5+.3*clarity})`;ctx.fillRect(x,baseY-bh,bw,bh);
+    const rows=Math.max(2,Math.floor(bh/16));
+    for(let r=0;r<rows;r++)for(let c=0;c<2;c++){
+      const lit=((i+r+c)%3)!==0||pn>.67;
+      ctx.fillStyle=lit?`rgba(237,196,99,${(.08+.4*pn+.18*good)*clarity})`:`rgba(12,15,17,${.22*clarity})`;
+      ctx.fillRect(x+5+c*Math.max(8,bw-11),baseY-bh+7+r*14,3,5);
+    }
+  }
+  ctx.fillStyle=`rgba(82,142,151,${(.06+.24*en+.15*good)*clarity})`;ctx.beginPath();
+  ctx.moveTo(wx,baseY+9);ctx.bezierCurveTo(W*.30,baseY-14,W*.55,baseY+26,wx+ww,baseY-4);ctx.lineTo(wx+ww,wy+wh);ctx.lineTo(wx,wy+wh);ctx.closePath();ctx.fill();
+  const trees=Math.floor(2+en*9+good*6);
+  for(let i=0;i<trees;i++){
+    const x=W*.08+(i/Math.max(1,trees-1))*W*.84,y=baseY+18+(i%2)*4,sw=Math.sin(worldTime*1.5+i)*1.2;
+    ctx.fillStyle=`rgba(${Math.round(58-good*5)},${Math.round(104+good*46)},${Math.round(66+good*18)},${.25+.55*clarity})`;
+    ctx.beginPath();ctx.arc(x+sw,y-10,6+good*3+en*2,0,Math.PI*2);ctx.fill();ctx.fillStyle="rgba(70,53,38,.55)";ctx.fillRect(x-1,y-6,2,9);
+  }
+  if(bad>0){for(let i=0;i<7;i++){const x=((i*83+worldTime*12)%(W+120))-60,y=wy+wh*(.12+.08*(i%4));ctx.fillStyle=`rgba(13,13,12,${.06+bad*.16})`;ctx.beginPath();ctx.ellipse(x,y,42+bad*28,13+bad*10,0,0,Math.PI*2);ctx.fill()}}
+  if(fever){for(let i=0;i<10;i++){const x=wx+((i*71+worldTime*30)%ww),y=wy+wh-((worldTime*40+i*60)%wh);ctx.fillStyle=`rgba(255,220,140,${.35})`;ctx.beginPath();ctx.arc(x,y,1.8,0,7);ctx.fill()}}
+  ctx.restore();
+  ctx.strokeStyle=`rgba(103,99,89,${.36+bad*.2})`;ctx.lineWidth=5;
+  ctx.beginPath();ctx.moveTo(W*.5,wy);ctx.lineTo(W*.5,wy+wh);ctx.moveTo(wx,wy+wh*.5);ctx.lineTo(wx+ww,wy+wh*.5);ctx.stroke();
+  ctx.fillStyle=`rgba(28,26,23,${.78-bad*.05})`;ctx.fillRect(0,wy+wh+6,W,H);
+  ctx.fillStyle="rgba(255,255,255,.03)";for(let y=wy+wh+30;y<H;y+=34)ctx.fillRect(0,y,W,1);
+  for(let i=0;i<4;i++){
+    const x=W*(.18+i*.215),flicker=bad>.42&&Math.sin(worldTime*18+i*2.7)>.62;
+    if(!flicker){const lg=ctx.createRadialGradient(x,wy,0,x,wy,H*.17);lg.addColorStop(0,`rgba(242,218,164,${.06+good*.12})`);lg.addColorStop(1,"rgba(242,218,164,0)");ctx.fillStyle=lg;ctx.fillRect(x-H*.17,wy-H*.05,H*.34,H*.3)}
+  }
+  if(bad>0){
+    const pulse=.5+.5*Math.sin(worldTime*6.3);ctx.fillStyle=`rgba(125,24,17,${bad*(.04+.03*pulse)})`;ctx.fillRect(0,0,W,H);
+    const vg=ctx.createRadialGradient(W/2,H*.46,H*.18,W/2,H*.46,H*.78);vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,`rgba(0,0,0,${bad*.4})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+  }
+}
+function drawBelt(){
+  const good=clamp(factoryMood,0,1),bad=clamp(-factoryMood,0,1);
+  const x=W*.13,w=W*.74,top=L.beltTop,bottom=L.beltBottom;
+  const g=ctx.createLinearGradient(x,0,x+w,0);
+  g.addColorStop(0,`rgba(${46+good*12-bad*8|0},${44+good*14-bad*8|0},${40+good*12-bad*8|0},.92)`);
+  g.addColorStop(.5,`rgba(${66+good*16-bad*12|0},${62+good*18-bad*12|0},${55+good*13-bad*10|0},.93)`);
+  g.addColorStop(1,`rgba(${46+good*12-bad*8|0},${44+good*14-bad*8|0},${40+good*12-bad*8|0},.92)`);
+  ctx.fillStyle=g;rr(x,top,w,bottom-top,10,null,null);ctx.fill();
+  ctx.strokeStyle=`rgba(215,198,163,${.1+good*.06})`;ctx.lineWidth=2;ctx.stroke();
+  const sp=(state==="playing"&&!tut)?(55+(elapsed/SHIFT)*70)*(pressureT>0?1.3:1):18;
+  const off=(worldTime*sp)%34;
+  ctx.save();ctx.beginPath();ctx.rect(x,top,w,bottom-top);ctx.clip();
+  ctx.strokeStyle=`rgba(235,222,194,${.05+good*.035})`;ctx.lineWidth=1;
+  for(let y=top-34+off;y<bottom;y+=34){ctx.beginPath();ctx.moveTo(x+4,y);ctx.lineTo(x+w-4,y);ctx.stroke()}
+  // 接近底线的危险渐变
+  if(current&&!current.event&&state==="playing"&&!tut){
+    const t=clamp((currentY-L.spawnY)/(L.missY-L.spawnY),0,1);
+    if(t>.55){const dg=ctx.createLinearGradient(0,bottom-120,0,bottom);dg.addColorStop(0,"rgba(200,80,60,0)");dg.addColorStop(1,`rgba(200,80,60,${(t-.55)*.5*(.7+.3*Math.sin(worldTime*14))})`);ctx.fillStyle=dg;ctx.fillRect(x,bottom-120,w,120)}
+  }
+  ctx.restore();
+  // 两侧滑槽
+  ctx.fillStyle="rgba(111,160,115,.10)";rr(W*.015,top+30,W*.1,bottom-top-60,8,null,null);ctx.fill();
+  ctx.fillStyle="rgba(200,150,90,.10)";rr(W*.885,top+30,W*.1,bottom-top-60,8,null,null);ctx.fill();
+}
+function drawHUD(){
+  if(state!=="playing"&&state!=="countdown"&&state!=="ending"&&!state.startsWith("paused"))return;
+  const top=L.hudTop,rush=rushing();
+  // 得分（暂停按钮右侧）
+  ctx.textAlign="left";ctx.fillStyle="rgba(242,228,195,.6)";ctx.font=font(700,10);ctx.fillText("得分",60,top+13);
+  ctx.fillStyle="#f6ead0";ctx.font=font(800,22);ctx.fillText(String(score),60,top+37);
+  // 计时圈
+  const cx=W/2,cy=top+26,r=22,tl=tut?SHIFT:timeLeft,frac=tl/SHIFT;
+  ctx.lineWidth=4;ctx.strokeStyle="rgba(255,255,255,.1)";ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  const pulse=rush?.5+.5*Math.sin(worldTime*12):0;
+  ctx.strokeStyle=rush?`rgb(${230},${110+pulse*40|0},${90})`:pressureT>0?"#e09a5c":"#e8d7ae";
+  ctx.lineCap="round";ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*frac);ctx.stroke();ctx.lineCap="butt";
+  ctx.textAlign="center";ctx.fillStyle=rush?"#ffb4a0":"#f6ead0";ctx.font=font(800,rush?17+pulse*2:16);ctx.fillText(tut?"教学":String(Math.ceil(tl)),cx,cy+6);
+  for(const p of timePops){const a=clamp(p.life/p.max,0,1);ctx.globalAlpha=a;ctx.fillStyle=p.good?"#a9d8a6":"#ff8c78";ctx.font=font(800,13);ctx.fillText(p.text,cx+r+18,cy+4-(1-a)*14)}ctx.globalAlpha=1;
+  // FLOW
+  const m=multiplier(),nt=nextTier(),hot=m>=3;
+  ctx.textAlign="right";
+  ctx.fillStyle=hot?"#f1c96d":"rgba(242,228,195,.6)";ctx.font=font(700,10);ctx.fillText(streak>0?`${streak} 连对`:"FLOW",W-16,top+13);
+  ctx.fillStyle=m>=4?`hsl(${40+Math.sin(worldTime*6)*8},90%,72%)`:hot?"#f1c96d":"#f6ead0";ctx.font=font(900,22);ctx.fillText("×"+m,W-16,top+37);
+  if(nt){const prevT=m===1?0:m===2?5:10,f=(streak-prevT)/(nt-prevT);rr(W-66,top+44,50,4,2,"rgba(255,255,255,.1)",null);if(f>0)rr(W-66,top+44,50*f,4,2,hot?"#f1c96d":"#e8d7ae",null)}
+  ctx.textAlign="left";
+  // ESG 指标条
+  const by=top+68,gap=10,bw=(W-32-gap*2)/3;
+  [["E 环境",env,"#9fd0a0"],["S 社会",people,"#e8c789"],["G 治理",trust,"#9cc3d6"]].forEach((b,i)=>{
+    const bx=16+i*(bw+gap);
+    ctx.fillStyle="rgba(242,228,195,.55)";ctx.font=font(700,9.5);ctx.fillText(b[0],bx,by);
+    ctx.textAlign="right";ctx.fillStyle=b[1]>=70?b[2]:"rgba(242,228,195,.7)";ctx.fillText(String(Math.round(b[1]))+(b[1]>=70?" ★":""),bx+bw,by);ctx.textAlign="left";
+    rr(bx,by+5,bw,5,2.5,"rgba(255,255,255,.09)",null);rr(bx,by+5,Math.max(5,bw*b[1]/100),5,2.5,b[2],null);
+    ctx.fillStyle="rgba(255,255,255,.4)";ctx.fillRect(bx+bw*.7,by+3,1.5,9);
+  });
+  for(const rg of rings){ctx.globalAlpha=clamp(rg.life/rg.max,0,1)*.6;ctx.strokeStyle="#f1d08a";ctx.lineWidth=2;ctx.beginPath();ctx.arc(rg.x,rg.y,rg.r,0,7);ctx.stroke()}ctx.globalAlpha=1;
+}
+function drawZones(){
+  if(state!=="playing"&&state!=="countdown"&&!state.startsWith("paused"))return;
+  const y=L.zoneY,h=L.zoneH,pad=14,gap=10,w=(W-pad*2-gap)/2;
+  const dn=clamp(Math.abs(dragVis)/(W*.22),0,1),lh=dragVis<0?dn:0,rh=dragVis>0?dn:0;
+  const ev=current&&current.event;
+  let tl=0,tr=0;
+  if(tut&&current&&!fly){const s=TUT_STEPS[tut.step];const need=s.need==="inspect"?(current.inspected?"left":null):s.need;const p=.5+.5*Math.sin(worldTime*6);if(need==="left")tl=p;if(need==="right")tr=p}
+  ctx.save();
+  if(lh>.95)ctx.translate(-2,0);
+  rr(pad,y,w,h,18,`rgba(73,112,78,${.12+.35*lh+.2*tl})`,`rgba(148,196,152,${.12+.5*lh+.3*tl})`);
+  ctx.restore();ctx.save();if(rh>.95)ctx.translate(2,0);
+  rr(pad+w+gap,y,w,h,18,`rgba(140,95,56,${.12+.35*rh+.2*tr})`,`rgba(221,174,105,${.12+.5*rh+.3*tr})`);
+  ctx.restore();
+  ctx.textAlign="center";
+  ctx.fillStyle=`rgba(230,240,225,${.75+.25*lh})`;ctx.font=font(800,16);ctx.fillText(ev?"← "+current.leftLabel:"← 回收",pad+w/2,y+h*.47);
+  ctx.fillStyle=`rgba(245,232,210,${.75+.25*rh})`;ctx.fillText(ev?current.rightLabel+" →":"再用 →",pad+w+gap+w/2,y+h*.47);
+  ctx.font=font(600,10);ctx.fillStyle="rgba(200,200,190,.55)";
+  ctx.fillText(ev?"长期 ESG":"材料再生 · E↑",pad+w/2,y+h*.75);ctx.fillText(ev?"短期得分":"延续使用 · S↑",pad+w+gap+w/2,y+h*.75);
+  ctx.textAlign="left";
+}
+function wrapText(text,x,y,maxW,lh,maxLines=3){const chars=[...text];let line="",n=0;for(const ch of chars){const t=line+ch;if(ctx.measureText(t).width>maxW&&line){ctx.fillText(line,x,y);line=ch;y+=lh;if(++n>=maxLines-1&&false)break}else line=t}if(line)ctx.fillText(line,x,y);return y}
+function drawItemCard(it,main){
+  if(it.event){
+    const w=Math.min(300,W*.8),h=200;
+    ctx.shadowColor="rgba(0,0,0,.4)";ctx.shadowBlur=32;ctx.shadowOffsetY=14;
+    rr(-w/2,-h/2-20,w,h,28,"rgba(34,30,28,.97)","rgba(232,199,137,.35)");ctx.shadowColor="transparent";
+    const p=.5+.5*Math.sin(worldTime*5);
+    ctx.fillStyle=`rgba(232,150,100,${.12+p*.08})`;ctx.beginPath();ctx.arc(0,-62,32,0,Math.PI*2);ctx.fill();
+    ctx.font=font(400,30);ctx.textAlign="center";ctx.fillText(it.icon||"!",0,-51);
+    ctx.fillStyle="#e8a77a";ctx.font=font(800,10);ctx.fillText("突发抉择 · 没有标准答案",0,-12);
+    ctx.fillStyle="#f5f5f7";ctx.font=font(750,19);ctx.fillText(it.name,0,16);
+    ctx.fillStyle="#a1a1a6";ctx.font=font(600,12);ctx.fillText(it.desc,0,38);
+    ctx.font=font(650,10.5);ctx.fillStyle="#a9d8a6";ctx.fillText("← "+it.leftText,0,62);ctx.fillStyle="#efd39b";ctx.fillText(it.rightText+" →",0,78);
+    ctx.textAlign="left";return;
+  }
+  const tile=136;
+  ctx.shadowColor="rgba(0,0,0,.34)";ctx.shadowBlur=30;ctx.shadowOffsetY=13;
+  rr(-tile/2,-90,tile,tile,34,"rgba(244,244,246,.97)",null);ctx.shadowColor="transparent";
+  const sh=ctx.createLinearGradient(0,-90,0,46);sh.addColorStop(0,"rgba(255,255,255,.35)");sh.addColorStop(.45,"rgba(255,255,255,0)");sh.addColorStop(1,"rgba(0,0,0,.03)");rr(-tile/2,-90,tile,tile,34,sh,null);
+  drawIcon(it.type,0,-22,1,it.flaw,it.mark);
+  // 检查扫描光
+  if(main&&scanT>2.0){const t=(2.4-scanT)/.4;ctx.save();rr(-tile/2,-90,tile,tile,34,null,null);ctx.clip();ctx.fillStyle="rgba(120,200,140,.25)";ctx.fillRect(-tile/2,-90+t*tile-10,tile,20);ctx.restore()}
+  ctx.textAlign="center";ctx.shadowColor="rgba(0,0,0,.5)";ctx.shadowBlur=10;
+  ctx.fillStyle="#f5f5f7";ctx.font=font(700,18);ctx.fillText(it.name,0,72);ctx.shadowBlur=0;
+  if(main){
+    let hint,col="#8e8e93";
+    if(it.inspected){hint=it.inspect;col="#b9e0ab"}
+    else if(it.mode==="variant"){hint="细看 · 拿不准就按住检查";col="#c9b48a"}
+    else if(it.mode==="choice"){hint="两种去向都成立";col="#a9c7d8"}
+    else hint="快速判断";
+    ctx.font=font(650,it.inspected?12:10.5);
+    if(it.inspected){const tw=ctx.measureText(hint).width+24;rr(-tw/2,82,tw,24,12,"rgba(30,50,34,.85)","rgba(169,216,166,.35)");ctx.fillStyle=col;ctx.fillText(hint,0,98)}
+    else{ctx.fillStyle=col;ctx.fillText(hint,0,96)}
+    if(it.inspected){ctx.fillStyle="#6fbf7a";ctx.beginPath();ctx.arc(54,-78,11,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff";ctx.font=font(900,12);ctx.fillText("✓",54,-74)}
+  }
+  ctx.textAlign="left";
+}
+/* 物品图标：坐标约在 [-40,40] 内 */
+function drawIcon(type,cx,cy,s,flaw,mark){
+  ctx.save();ctx.translate(cx,cy);ctx.scale(s,s);
+  const stroke="#5b5041",warm="#b5966b";
+  ctx.lineCap="round";ctx.lineJoin="round";ctx.lineWidth=3;ctx.strokeStyle=stroke;
+  const bulge=flaw==="bulge";
+  if(type==="bottle"||type==="glass"){
+    const ww=type==="glass"?31:26,hh=66;rr(-ww/2,-hh/2+8,ww,hh-8,9,type==="glass"?"#9eb4a5":"#b7c1a7",stroke);
+    ctx.fillStyle=stroke;ctx.fillRect(-7,-hh/2,14,10);ctx.fillStyle="rgba(255,255,255,.4)";ctx.fillRect(-ww/2+6,-hh/2+18,4,33);
+  }else if(type==="jar"){
+    rr(-24,-22,48,52,12,"#b9cbbf",stroke);ctx.fillStyle="#8a7356";rr(-20,-34,40,13,4,"#8a7356",stroke);ctx.fillStyle="rgba(255,255,255,.45)";ctx.fillRect(-16,-14,5,34);
+  }else if(type==="box"||type==="carton"){
+    const fill=type==="carton"?"#c1b38f":"#b59569";ctx.fillStyle=fill;ctx.fillRect(-31,-27,62,54);ctx.strokeRect(-31,-27,62,54);
+    ctx.fillStyle=type==="carton"?"#879a83":"#d3b88b";ctx.fillRect(-4,-27,8,54);ctx.beginPath();ctx.moveTo(-31,-27);ctx.lineTo(0,-8);ctx.lineTo(31,-27);ctx.stroke();
+  }else if(type==="can"){
+    rr(-19,-31,38,62,10,"#a8aaa4",stroke);ctx.fillStyle="#d6d6ce";ctx.fillRect(-14,-24,28,3);ctx.fillRect(-14,21,28,3);ctx.fillStyle="#b45c4b";ctx.fillRect(-19,-8,38,14);
+  }else if(type==="shirt"){
+    ctx.fillStyle="#8a9b9e";ctx.beginPath();ctx.moveTo(-18,-28);ctx.lineTo(-34,-15);ctx.lineTo(-24,2);ctx.lineTo(-16,-3);ctx.lineTo(-13,29);ctx.lineTo(13,29);ctx.lineTo(16,-3);ctx.lineTo(24,2);ctx.lineTo(34,-15);ctx.lineTo(18,-28);ctx.lineTo(8,-18);ctx.lineTo(-8,-18);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(type==="battery"||type==="powerbank"){
+    const ww=type==="powerbank"?42:44,hh=type==="powerbank"?58:64;
+    if(bulge){ctx.fillStyle="#777f82";ctx.beginPath();ctx.ellipse(0,0,ww/2+6,hh/2,0,0,Math.PI*2);ctx.fill();ctx.stroke()}
+    else rr(-ww/2,-hh/2,ww,hh,8,type==="powerbank"?"#777f82":"#6f7d70",stroke);
+    if(type==="battery"){ctx.fillStyle=stroke;ctx.fillRect(-9,-hh/2-6,18,7)}
+    ctx.fillStyle="#e4d39f";ctx.font=font(900,19);ctx.textAlign="center";ctx.fillText(type==="powerbank"?"⚡":"+",0,-4);if(type==="battery")ctx.fillText("–",0,20);ctx.textAlign="left";
+  }else if(type==="paper"||type==="book"){
+    if(type==="paper"){ctx.fillStyle="#d8cfb8";ctx.beginPath();ctx.moveTo(-27,-32);ctx.lineTo(22,-29);ctx.lineTo(29,30);ctx.lineTo(-24,32);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle="#9b8d70";ctx.lineWidth=2;for(let y=-18;y<20;y+=10){ctx.beginPath();ctx.moveTo(-16,y);ctx.lineTo(18,y);ctx.stroke()}}
+    else{ctx.fillStyle="#8d765b";ctx.beginPath();ctx.moveTo(-31,-28);ctx.quadraticCurveTo(-2,-34,0,-18);ctx.quadraticCurveTo(3,-34,31,-28);ctx.lineTo(30,28);ctx.quadraticCurveTo(5,23,0,32);ctx.quadraticCurveTo(-5,23,-30,28);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#d0bea0";ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(0,31);ctx.stroke()}
+  }else if(type==="bulb"){
+    ctx.fillStyle="#d5c389";ctx.beginPath();ctx.arc(0,-9,24,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#777167";ctx.fillRect(-10,14,20,14);ctx.fillStyle="#4e4942";ctx.fillRect(-8,28,16,6);
+    ctx.strokeStyle="#5b5041";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-14);ctx.lineTo(-2,-4);ctx.lineTo(4,-16);ctx.lineTo(10,-6);ctx.stroke();
+  }else if(type==="medicine"){
+    rr(-20,-29,40,58,8,"#b6c4b5",stroke);ctx.fillStyle="#6e896f";ctx.fillRect(-9,-36,18,8);ctx.fillStyle="#e6e0ca";ctx.fillRect(-12,-8,24,22);ctx.fillStyle="#8b4c42";ctx.fillRect(-2,-4,4,14);ctx.fillRect(-7,1,14,4);
+  }else if(type==="phone"){
+    if(bulge){ctx.save();ctx.translate(0,0);ctx.fillStyle="#555d5f";ctx.beginPath();ctx.moveTo(-23,-36);ctx.lineTo(23,-36);ctx.quadraticCurveTo(33,0,23,36);ctx.lineTo(-23,36);ctx.quadraticCurveTo(-33,0,-23,-36);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle="#9fb1ae";ctx.beginPath();ctx.moveTo(-17,-29);ctx.lineTo(17,-29);ctx.quadraticCurveTo(25,-4,17,23);ctx.lineTo(-17,23);ctx.quadraticCurveTo(-25,-4,-17,-29);ctx.fill();ctx.restore();
+      ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-10,-20);ctx.quadraticCurveTo(0,-8,12,-22);ctx.stroke()}
+    else{rr(-23,-36,46,72,9,"#555d5f",stroke);rr(-17,-29,34,52,5,"#9fb1ae",null)}
+    ctx.fillStyle="#c7b274";ctx.beginPath();ctx.arc(0,29,3,0,Math.PI*2);ctx.fill();
+  }else if(type==="shoes"){
+    ctx.fillStyle="#8b6e57";ctx.beginPath();ctx.moveTo(-31,-2);ctx.lineTo(-7,-11);ctx.lineTo(7,6);ctx.lineTo(31,11);ctx.lineTo(32,23);ctx.lineTo(-4,23);ctx.lineTo(-31,13);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle="#aa8c70";ctx.beginPath();ctx.moveTo(-20,-22);ctx.lineTo(4,-27);ctx.lineTo(16,-12);ctx.lineTo(31,-8);ctx.lineTo(31,2);ctx.lineTo(-5,2);ctx.lineTo(-20,-7);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(type==="toy"){
+    ctx.fillStyle="#b57e66";ctx.beginPath();ctx.arc(0,-17,18,0,Math.PI*2);ctx.fill();ctx.stroke();rr(-22,2,44,31,10,"#8c9b79",stroke);ctx.fillStyle=stroke;ctx.beginPath();ctx.arc(-6,-19,2,0,Math.PI*2);ctx.arc(6,-19,2,0,Math.PI*2);ctx.fill();
+  }else if(type==="helmet"){
+    ctx.fillStyle="#d0a44f";ctx.beginPath();ctx.arc(0,3,30,Math.PI,Math.PI*2);ctx.lineTo(31,8);ctx.lineTo(-31,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle=stroke;ctx.fillRect(-8,-25,5,26);ctx.fillRect(-34,8,68,6);
+  }else if(type==="solar"){
+    ctx.save();ctx.rotate(-.08);ctx.fillStyle="#596f79";ctx.fillRect(-35,-25,70,50);ctx.strokeRect(-35,-25,70,50);ctx.strokeStyle="#a9bdba";ctx.lineWidth=1;for(let x=-21;x<35;x+=14){ctx.beginPath();ctx.moveTo(x,-25);ctx.lineTo(x,25);ctx.stroke()}for(let y=-13;y<25;y+=13){ctx.beginPath();ctx.moveTo(-35,y);ctx.lineTo(35,y);ctx.stroke()}ctx.restore();
+  }else if(type==="package"){
+    ctx.fillStyle="#a4916a";ctx.beginPath();ctx.moveTo(-28,-31);ctx.lineTo(26,-31);ctx.lineTo(31,28);ctx.lineTo(-31,28);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#738f75";ctx.beginPath();ctx.ellipse(0,1,13,7,-.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle="#738f75";ctx.beginPath();ctx.moveTo(-4,7);ctx.lineTo(9,-10);ctx.stroke();
+  }else if(type==="laptop"){
+    rr(-31,-29,62,43,5,"#6d7474",stroke);ctx.fillStyle="#98aaa6";ctx.fillRect(-25,-23,50,31);ctx.fillStyle="#656058";ctx.beginPath();ctx.moveTo(-38,17);ctx.lineTo(38,17);ctx.lineTo(29,28);ctx.lineTo(-29,28);ctx.closePath();ctx.fill();ctx.stroke();
+  }else if(type==="cup"){
+    ctx.fillStyle="#b18b6d";ctx.beginPath();ctx.moveTo(-24,-29);ctx.lineTo(20,-29);ctx.lineTo(15,29);ctx.lineTo(-15,29);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#7d5f48";ctx.fillRect(-25,-33,47,6);ctx.strokeStyle=stroke;ctx.beginPath();ctx.arc(20,-2,12,-Math.PI/2,Math.PI/2);ctx.stroke();
+  }else if(type==="bike"){
+    ctx.strokeStyle=stroke;ctx.lineWidth=4;ctx.beginPath();ctx.arc(-23,15,18,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(24,15,18,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(-23,15);ctx.lineTo(-2,-10);ctx.lineTo(14,15);ctx.lineTo(-23,15);ctx.moveTo(-2,-10);ctx.lineTo(24,15);ctx.moveTo(-7,-18);ctx.lineTo(4,-18);ctx.stroke();
+  }else if(type==="vest"){
+    ctx.fillStyle="#c3a14b";ctx.beginPath();ctx.moveTo(-24,-28);ctx.lineTo(-8,-34);ctx.lineTo(0,-18);ctx.lineTo(8,-34);ctx.lineTo(24,-28);ctx.lineTo(28,30);ctx.lineTo(8,30);ctx.lineTo(0,10);ctx.lineTo(-8,30);ctx.lineTo(-28,30);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.strokeStyle=flaw==="worn"?"rgba(238,224,165,.35)":"#eee0a5";ctx.lineWidth=5;ctx.setLineDash(flaw==="worn"?[5,6]:[]);ctx.beginPath();ctx.moveTo(-22,3);ctx.lineTo(22,3);ctx.stroke();ctx.setLineDash([]);
+  }else if(type==="charger"){
+    ctx.strokeStyle=stroke;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-30,18);ctx.bezierCurveTo(-15,-5,8,26,19,2);ctx.stroke();rr(10,-22,25,30,5,"#a9aaa4",stroke);ctx.fillStyle=stroke;ctx.fillRect(18,-29,3,8);ctx.fillRect(26,-29,3,8);ctx.fillRect(-34,14,8,10);
+  }else if(type==="keyboard"){
+    ctx.save();ctx.rotate(-.06);rr(-37,-23,74,46,7,"#7c817e",stroke);ctx.fillStyle="#b4b9b4";for(let r=0;r<3;r++)for(let c=0;c<8;c++)ctx.fillRect(-29+c*8,-15+r*10,5,6);ctx.restore();
+  }else if(type==="kettle"){
+    ctx.fillStyle="#9da5a2";ctx.beginPath();ctx.moveTo(-22,-25);ctx.lineTo(16,-25);ctx.lineTo(25,25);ctx.lineTo(-22,25);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle=stroke;ctx.lineWidth=5;ctx.beginPath();ctx.arc(17,-1,23,-Math.PI/2,Math.PI/2);ctx.stroke();ctx.beginPath();ctx.moveTo(-22,-12);ctx.lineTo(-36,-5);ctx.lineTo(-22,2);ctx.stroke();
+  }else if(type==="umbrella"){
+    ctx.fillStyle="#7892a0";ctx.beginPath();ctx.arc(0,-6,33,Math.PI,0);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle=stroke;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(0,25);ctx.quadraticCurveTo(0,38,-11,34);ctx.stroke();
+  }else if(type==="backpack"){
+    rr(-27,-27,54,59,13,"#89906d",stroke);ctx.strokeStyle=stroke;ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,-26,18,Math.PI,0);ctx.stroke();ctx.fillStyle="#a9ad8e";ctx.fillRect(-16,5,32,16);
+  }else if(type==="chair"){
+    ctx.fillStyle="#9a7656";ctx.fillRect(-24,-25,48,8);ctx.fillRect(-24,-19,7,36);ctx.fillRect(17,-19,7,36);ctx.fillRect(-21,0,42,8);ctx.fillRect(-19,8,6,26);ctx.fillRect(13,8,6,26);ctx.strokeStyle=stroke;ctx.strokeRect(-24,-25,48,42);
+  }else if(type==="camera"){
+    rr(-34,-23,68,47,8,"#606769",stroke);ctx.fillStyle="#9aa4a2";ctx.beginPath();ctx.arc(0,1,17,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#384044";ctx.beginPath();ctx.arc(0,1,9,0,Math.PI*2);ctx.fill();ctx.fillStyle="#777f80";ctx.fillRect(-20,-31,20,9);
+  }else if(type==="headphones"){
+    ctx.strokeStyle=stroke;ctx.lineWidth=7;ctx.beginPath();ctx.arc(0,0,28,Math.PI,0);ctx.stroke();rr(-35,-2,14,31,6,"#7f8b8c",stroke);rr(21,-2,14,31,6,"#7f8b8c",stroke);
+  }else if(type==="pan"){
+    ctx.fillStyle="#6f7370";ctx.beginPath();ctx.arc(-7,0,25,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle=stroke;ctx.lineWidth=7;ctx.beginPath();ctx.moveTo(16,-2);ctx.lineTo(40,-9);ctx.stroke();ctx.fillStyle="#3f4442";ctx.beginPath();ctx.arc(-7,0,17,0,Math.PI*2);ctx.fill();
+  }else if(type==="foodbox"){
+    rr(-31,-25,62,50,9,"#a9b7aa",stroke);ctx.fillStyle="rgba(255,255,255,.25)";ctx.fillRect(-24,-18,48,7);ctx.strokeStyle="#6f8173";ctx.beginPath();ctx.moveTo(-19,0);ctx.lineTo(19,0);ctx.stroke();
+  }else if(type==="fan"){
+    ctx.fillStyle="#7f8988";ctx.beginPath();ctx.arc(0,-8,28,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle="#d0d6cf";for(let i=0;i<3;i++){ctx.save();ctx.translate(0,-8);ctx.rotate(i*Math.PI*2/3);ctx.beginPath();ctx.ellipse(0,-11,7,15,0,0,Math.PI*2);ctx.fill();ctx.restore()}ctx.fillStyle=stroke;ctx.beginPath();ctx.arc(0,-8,4,0,Math.PI*2);ctx.fill();ctx.fillRect(-4,20,8,14);ctx.fillRect(-18,32,36,6);
+  }else{ctx.fillStyle=warm;ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill();ctx.stroke()}
+  if(flaw)drawFlaw(flaw,type);
+  if(mark==="trace"){rr(10,-28,18,18,3,"#f5f3ea","#5b5041");ctx.fillStyle="#3a3a3a";[[13,-25],[21,-25],[13,-17],[18,-21],[22,-16]].forEach(p=>ctx.fillRect(p[0],p[1],4,4))}
+  ctx.restore();
+}
+function drawFlaw(f,type){
+  ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+  if(f==="crack"){ctx.strokeStyle="#2b221a";ctx.lineWidth=2.2;ctx.beginPath();const o=type==="helmet"?[-2,-24]:type==="shoes"?[-18,14]:[-12,-18];ctx.moveTo(o[0],o[1]);ctx.lineTo(o[0]+6,o[1]+8);ctx.lineTo(o[0]+2,o[1]+14);ctx.lineTo(o[0]+10,o[1]+22);ctx.moveTo(o[0]+6,o[1]+8);ctx.lineTo(o[0]+13,o[1]+6);ctx.stroke()}
+  else if(f==="burn"){const g=ctx.createRadialGradient(10,6,1,10,6,17);g.addColorStop(0,"rgba(20,14,10,.95)");g.addColorStop(.6,"rgba(60,36,20,.6)");g.addColorStop(1,"rgba(60,36,20,0)");ctx.fillStyle=g;ctx.beginPath();ctx.arc(10,6,17,0,7);ctx.fill();
+    const t=worldTime;ctx.strokeStyle="rgba(120,115,110,.5)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(12,-6);ctx.quadraticCurveTo(6+Math.sin(t*3)*3,-16,13,-26);ctx.stroke()}
+  else if(f==="rust"){ctx.fillStyle="#8a4b25";[[-14,-10,4],[-4,-16,3],[8,-4,5],[14,10,3],[-8,8,4],[2,18,3],[-18,2,2.5]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,7);ctx.fill()});ctx.fillStyle="rgba(170,90,40,.5)";ctx.beginPath();ctx.arc(8,-4,8,0,7);ctx.fill()}
+  else if(f==="bulge"){ctx.strokeStyle="rgba(196,72,52,.85)";ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.arc(-36,0,10,-.9,.9);ctx.stroke();ctx.beginPath();ctx.arc(36,0,10,Math.PI-.9,Math.PI+.9);ctx.stroke();ctx.setLineDash([])}
+  else if(f==="mold"){ctx.fillStyle="rgba(92,112,62,.85)";[[-12,-4,6],[-4,6,4],[10,-12,5],[12,14,4],[-16,16,3]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,7);ctx.fill()});ctx.fillStyle="rgba(160,180,120,.7)";[[-10,-6,2],[10,-13,1.6],[12,13,1.4]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],p[2],0,7);ctx.fill()})}
+  else if(f==="leak"){ctx.fillStyle="rgba(170,140,50,.9)";ctx.beginPath();ctx.ellipse(6,8,14,7,.2,0,7);ctx.fill();const dy=(worldTime*14)%14;ctx.beginPath();ctx.moveTo(10,14+dy);ctx.quadraticCurveTo(15,22+dy,10,26+dy);ctx.quadraticCurveTo(5,22+dy,10,14+dy);ctx.fill()}
+  else if(f==="rot"){ctx.fillStyle="rgba(50,32,20,.9)";ctx.beginPath();ctx.ellipse(-16,24,5,9,0,0,7);ctx.fill();ctx.beginPath();ctx.ellipse(16,18,4,7,0,0,7);ctx.fill();ctx.fillStyle="rgba(90,70,40,.6)";ctx.beginPath();ctx.arc(-6,3,5,0,7);ctx.fill()}
+  else if(f==="scratch"){ctx.strokeStyle="rgba(225,220,205,.9)";ctx.lineWidth=1.8;[[-20,-8,0,6],[-14,-14,4,-2],[-18,6,-2,12],[-10,-2,6,8]].forEach(l=>{ctx.beginPath();ctx.moveTo(l[0],l[1]);ctx.lineTo(l[2],l[3]);ctx.stroke()})}
+  else if(f==="worn"){ctx.strokeStyle="#5b5041";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-14,16);ctx.lineTo(-10,22);ctx.moveTo(-12,18);ctx.lineTo(-17,22);ctx.moveTo(12,-14);ctx.lineTo(17,-10);ctx.stroke();ctx.fillStyle="rgba(60,48,30,.75)";ctx.beginPath();ctx.ellipse(14,16,5,3.5,.4,0,7);ctx.fill()}
+  else if(f==="spark"){const p=.6+.4*Math.sin(worldTime*20);ctx.fillStyle=`rgba(240,200,60,${p})`;ctx.strokeStyle="#5b5041";ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(-28,-30);ctx.lineTo(-34,-18);ctx.lineTo(-29,-18);ctx.lineTo(-33,-8);ctx.lineTo(-23,-22);ctx.lineTo(-28,-22);ctx.closePath();ctx.fill();ctx.stroke()}
+  else if(f==="claim"){ctx.save();ctx.rotate(-.18);rr(-22,-34,44,17,4,"#e8e2cc","#8b4c42");ctx.fillStyle="#8b4c42";ctx.font=font(900,10);ctx.textAlign="center";ctx.fillText("100%♻",0,-22);ctx.restore();ctx.strokeStyle="rgba(80,60,40,.6)";ctx.lineWidth=1.5;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(-28,14);ctx.lineTo(30,14);ctx.moveTo(-29,20);ctx.lineTo(30,20);ctx.stroke();ctx.setLineDash([])}
+  ctx.restore();
+}
+const iconCache={};
+function iconURL(type,flaw,mark){
+  const k=type+"|"+(flaw||"")+"|"+(mark||"");if(iconCache[k])return iconCache[k];
+  const c=document.createElement("canvas");c.width=c.height=120;const x=c.getContext("2d");const prev=ctx;ctx=x;
+  ctx.fillStyle="#f1f1f3";ctx.fillRect(0,0,120,120);drawIcon(type,60,60,1.15,flaw,mark);ctx=prev;
+  return iconCache[k]=c.toDataURL();
+}
+function drawCurrent(){
+  if(!current)return;
+  const S=L.S;let x=W/2+dragVis,y=currentY,rot=dragVis/W*.32,alpha=1,scale=S;
+  if(tut&&tut.wrongT>0)x+=Math.sin(tut.wrongT*50)*8*tut.wrongT;
+  if(spawnT>0&&!fly){const t=easeBack(1-spawnT/.22);y-=18*(1-t);scale*=.9+.1*t;alpha=.2+.8*clamp(t,0,1)}
+  if(fly){
+    const t=clamp(1-flyT/flyTotal,0,1),e=easeOut(t);
+    if(fly==="left"){x=lerp(x,-W*.35,e);rot=lerp(rot,-.7,e);y+=e*20}
+    if(fly==="right"){x=lerp(x,W*1.35,e);rot=lerp(rot,.7,e);y+=e*20}
+    if(fly==="down"){y=lerp(y,H*1.1,e);scale*=1-.15*e}
+    alpha=1-t*.4;
+  }
+  // 拖动时的“盖章”
+  ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(rot);ctx.scale(scale,scale);drawItemCard(current,true);
+  const d=clamp(Math.abs(dragVis)/(W*.2),0,1);
+  if(d>.08&&!fly){
+    const left=dragVis<0,ev=current.event;
+    const label=ev?(left?current.leftLabel:current.rightLabel):(left?"回收":"再用");
+    ctx.save();ctx.translate(left?28:-28,ev?-40:-56);ctx.rotate(left?.25:-.25);ctx.globalAlpha=alpha*d;
+    ctx.font=font(900,22);const tw=ctx.measureText(label).width+22;
+    ctx.strokeStyle=left?"#6fbf7a":"#d89a4a";ctx.lineWidth=3;rr(-tw/2,-18,tw,36,9,left?"rgba(232,250,232,.85)":"rgba(255,244,226,.85)",null);ctx.stroke();
+    ctx.fillStyle=left?"#3e8a4a":"#a8661e";ctx.textAlign="center";ctx.fillText(label,0,8);ctx.textAlign="left";ctx.restore();
+  }
+  ctx.restore();
+  // 长按检查进度环
+  if(pointer.down&&!pointer.moved&&!fly&&!current.event&&!current.inspected){
+    const hold=clamp((performance.now()-pointer.t0)/380,0,1);
+    if(hold>.08){const r=82*S;ctx.lineWidth=4;ctx.strokeStyle="rgba(238,218,174,.15)";ctx.beginPath();ctx.arc(x,y-22*S,r,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(130,200,140,${.6+.4*hold})`;ctx.lineCap="round";ctx.beginPath();ctx.arc(x,y-22*S,r,-Math.PI/2,-Math.PI/2+Math.PI*2*hold);ctx.stroke();ctx.lineCap="butt"}
+  }
+}
+function drawFx(){
+  for(const s of swipeFx){
+    const a=clamp(s.life/s.max,0,1),t=1-a,left=s.dir==="left";
+    ctx.globalAlpha=a*.85;const gx=left?0:W,grd=ctx.createRadialGradient(gx,s.y,0,gx,s.y,W*.55*(.6+t*.6));
+    const col=!s.good?"200,90,70":left?"130,200,140":"235,180,100";
+    grd.addColorStop(0,`rgba(${col},.45)`);grd.addColorStop(1,`rgba(${col},0)`);ctx.fillStyle=grd;ctx.fillRect(0,s.y-W*.6,W,W*1.2);
+  }
+  ctx.globalAlpha=1;
+  for(const p of particles){ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill()}
+  ctx.globalAlpha=1;
+  for(const p of pops){
+    const a=clamp(p.life/p.max,0,1),t=1-a,sc=t<.15?easeBack(t/.15):1;
+    ctx.globalAlpha=a;ctx.textAlign="center";ctx.save();ctx.translate(p.x,p.y);ctx.scale(sc,sc);
+    ctx.shadowColor="rgba(0,0,0,.6)";ctx.shadowBlur=8;
+    ctx.font=font(900,p.big?28:22);ctx.fillStyle=p.good?(p.big?"#ffd98a":"#f3e4bb"):"#ff9a86";ctx.fillText(p.text,0,0);
+    if(p.sub){ctx.font=font(700,11);ctx.fillStyle=p.good?"#cfe6c4":"#e7b0a4";ctx.fillText(p.sub,0,17)}
+    ctx.restore();ctx.textAlign="left";
+  }
+  ctx.globalAlpha=1;
+}
+function drawBanners(){
+  // 失误纠正
+  if(coach){
+    const a=clamp(coach.life/.3,0,1)*clamp((coach.max-coach.life)/.15,0,1);
+    const bw=Math.min(W-28,380),bh=66,bx=W/2-bw/2,by=L.zoneY-bh-10;
+    ctx.globalAlpha=a;rr(bx,by,bw,bh,18,"rgba(44,26,22,.95)","rgba(224,128,108,.4)");
+    ctx.fillStyle="#ff9a86";ctx.font=font(800,12);ctx.textAlign="left";ctx.fillText(`${coach.name} 应该 ${coach.go==="left"?"← 回收":"再用 →"}`,bx+14,by+22);
+    ctx.fillStyle="#e8d6d0";ctx.font=font(600,11.5);wrapText(coach.why||"",bx+14,by+42,bw-28,16);
+    ctx.globalAlpha=1;
+  }
+  // 中央提示
+  if(banner){
+    const a=clamp(banner.life/.25,0,1),inT=clamp((banner.max-banner.life)/.18,0,1),sc=easeBack(inT);
+    ctx.globalAlpha=a;ctx.save();ctx.translate(W/2,L.hudBottom+22);ctx.scale(.85+.15*sc,.85+.15*sc);
+    ctx.font=font(800,15);const tw=Math.min(W-30,Math.max(ctx.measureText(banner.t).width,(ctx.font=font(600,11),ctx.measureText(banner.s||"").width))+40);
+    rr(-tw/2,-20,tw,banner.s?50:36,18,"rgba(24,22,20,.92)","rgba(238,216,171,.22)");
+    ctx.textAlign="center";ctx.fillStyle="#f6e6c0";ctx.font=font(800,15);ctx.fillText(banner.t,0,2);
+    if(banner.s){ctx.fillStyle="#a9a39a";ctx.font=font(600,11);ctx.fillText(banner.s,0,20)}
+    ctx.restore();ctx.textAlign="left";ctx.globalAlpha=1;
+  }
+}
+function drawTutorialOverlay(){
+  if(!tut||state!=="playing"||!current||fly)return;
+  const s=TUT_STEPS[tut.step],S=L.S;
+  const need=s.need==="inspect"?(current.inspected?"left":"inspect"):s.need;
+  // 标题
+  ctx.textAlign="center";ctx.fillStyle="rgba(10,10,10,.0)";
+  const ty=L.hudBottom+20;
+  if(!banner){rr(W/2-130,ty-22,260,54,18,"rgba(24,22,20,.92)","rgba(238,216,171,.25)");
+    ctx.fillStyle="#f6e6c0";ctx.font=font(800,16);ctx.fillText(need==="left"&&s.need==="inspect"?"鼓包 → 向左回收":s.title,W/2,ty+1);
+    ctx.fillStyle="#a9a39a";ctx.font=font(600,11);ctx.fillText(need==="left"&&s.need==="inspect"?"检查过的物品额外 +30 分":s.sub,W/2,ty+21)}
+  ctx.fillStyle="rgba(200,190,170,.5)";ctx.font=font(700,10);ctx.fillText(`教学 ${tut.step+1}/3`,W/2,L.zoneY-12);
+  // 手势动画
+  const cy=currentY-10*S,t=(tut.t%1.6)/1.6;
+  let hx=W/2,hy=cy+40*S,al=1,press=0;
+  if(need==="left"||need==="right"){const e=easeOut(clamp(t/.75,0,1));hx=W/2+(need==="left"?-1:1)*e*W*.3;al=t<.8?1:1-(t-.8)/.2}
+  else{press=clamp(t/.6,0,1);al=t<.85?1:1-(t-.85)/.15;
+    ctx.globalAlpha=al;ctx.strokeStyle="rgba(130,200,140,.85)";ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.arc(W/2,cy-12*S,82*S,-Math.PI/2,-Math.PI/2+Math.PI*2*press);ctx.stroke();ctx.lineCap="butt"}
+  ctx.globalAlpha=al*.95;
+  ctx.fillStyle="rgba(255,255,255,.92)";ctx.beginPath();ctx.arc(hx,hy,15-press*3,0,7);ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.4)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(hx,hy,22+Math.sin(tut.t*8)*2,0,7);ctx.stroke();
+  if(need!=="inspect"){ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=3;ctx.setLineDash([4,6]);ctx.beginPath();ctx.moveTo(W/2,hy);ctx.lineTo(hx,hy);ctx.stroke();ctx.setLineDash([])}
+  ctx.globalAlpha=1;ctx.textAlign="left";
+}
+function drawCountdown(){
+  if(state!=="countdown")return;
+  const n=Math.ceil(countT/.8),f=(countT%.8)/.8;
+  ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(0,0,W,H);
+  ctx.textAlign="center";ctx.globalAlpha=clamp(f*2,0,1);
+  ctx.save();ctx.translate(W/2,H*.45);const sc=1+(1-f)*.0+f*.4;ctx.scale(sc,sc);
+  ctx.fillStyle="#f6e6c0";ctx.font=font(900,90);ctx.fillText(n>0?String(n):"",0,30);ctx.restore();
+  ctx.globalAlpha=1;ctx.font=font(700,13);ctx.fillStyle="rgba(240,228,200,.8)";
+  ctx.fillText(mode==="daily"?`今日挑战 · 第 ${dailyNo()} 期`:"夜班即将开始",W/2,H*.45+80);
+  ctx.font=font(600,11);ctx.fillStyle="rgba(200,190,170,.6)";ctx.fillText("越早判断分越高 · 连对进入 FLOW",W/2,H*.45+102);
+  ctx.textAlign="left";
+}
+function drawEnding(){
+  if(state!=="ending")return;
+  const t=1-endT/1.3;ctx.fillStyle=`rgba(0,0,0,${t*.5})`;ctx.fillRect(0,0,W,H);
+  ctx.textAlign="center";ctx.globalAlpha=clamp(t*3,0,1);ctx.save();ctx.translate(W/2,H*.44);const sc=.8+.2*easeBack(clamp(t*2.5,0,1));ctx.scale(sc,sc);
+  ctx.fillStyle="#f6e6c0";ctx.font=font(900,40);ctx.fillText("下班！",0,0);ctx.font=font(700,13);ctx.fillStyle="#bdb4a2";ctx.fillText("正在结算这座城市…",0,30);ctx.restore();
+  ctx.globalAlpha=1;ctx.textAlign="left";
+}
+function render(){
+  ctx=mainCtx;ctx.clearRect(0,0,W,H);ctx.save();
+  if(shake>0)ctx.translate((Math.random()-.5)*shake,(Math.random()-.5)*shake);
+  drawBackground();drawBelt();drawZones();drawCurrent();drawFx();drawHUD();drawBanners();drawTutorialOverlay();
+  ctx.restore();
+  if(flash>0){ctx.fillStyle=`rgba(${flashColor},${flash*1.6})`;ctx.fillRect(0,0,W,H)}
+  if(goldFlash>0){const g=ctx.createRadialGradient(W/2,H*.4,0,W/2,H*.4,H*.7);g.addColorStop(0,`rgba(255,220,140,${goldFlash*.3})`);g.addColorStop(1,"rgba(255,220,140,0)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
+  if(rushing()){const p=.5+.5*Math.sin(worldTime*8);const vg=ctx.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.75);vg.addColorStop(0,"rgba(200,60,40,0)");vg.addColorStop(1,`rgba(200,60,40,${.12+.1*p})`);ctx.fillStyle=vg;ctx.fillRect(0,0,W,H)}
+  drawCountdown();drawEnding();
+}
+
+/* ============================================================
+   输入：整屏可划；按住任意处检查；点击底部区域也可选择
+   ============================================================ */
+function clientPoint(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
+function clearLong(){if(pointer.longTimer){clearTimeout(pointer.longTimer);pointer.longTimer=null}}
+canvas.addEventListener("pointerdown",e=>{
+  ensureAudio();
+  if(state!=="playing"||!current||fly)return;
+  const p=clientPoint(e);if(p.y<L.hudBottom-10)return;
+  pointer.down=true;pointer.id=e.pointerId;pointer.sx=pointer.x=pointer.lastX=p.x;pointer.sy=pointer.y=p.y;pointer.moved=false;pointer.t0=pointer.lastT=performance.now();pointer.vx=0;
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+  clearLong();
+  const inZone=p.y>=L.zoneY-4;
+  if(!inZone&&!current.event&&!current.inspected){pointer.longTimer=setTimeout(()=>{if(pointer.down&&!pointer.moved)inspectCurrent()},380);setTimeout(()=>{if(pointer.down&&!pointer.moved&&current&&!current.inspected&&!current.event)sfx("hold")},90)}
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!pointer.down||e.pointerId!==pointer.id)return;
+  const p=clientPoint(e),now=performance.now();
+  const dtm=Math.max(1,now-pointer.lastT);pointer.vx=pointer.vx*.4+((p.x-pointer.lastX)/dtm)*.6;pointer.lastX=p.x;pointer.lastT=now;
+  pointer.x=p.x;pointer.y=p.y;const dx=p.x-pointer.sx,dy=p.y-pointer.sy;
+  if(!pointer.moved&&Math.hypot(dx,dy)>10){pointer.moved=true;clearLong()}
+  if(pointer.moved)dragX=clamp(dx*1.05,-W*.42,W*.42);
+},{passive:true});
+function endPointer(e){
+  if(!pointer.down||e.pointerId!==pointer.id)return;
+  clearLong();const dx=pointer.x-pointer.sx,dy=pointer.y-pointer.sy,dt=performance.now()-pointer.t0;
+  pointer.down=false;pointer.id=null;
+  if(state!=="playing"||!current||fly){dragX=0;return}
+  const th=Math.max(56,W*.16),flick=Math.abs(pointer.vx)>.55&&Math.abs(dx)>28;
+  if((Math.abs(dx)>th||flick)&&Math.abs(dx)>Math.abs(dy)*.6){resolve(dx<0?"left":"right");return}
+  if(!pointer.moved&&dt<300&&pointer.sy>=L.zoneY-4){resolve(pointer.sx<W/2?"left":"right");return}
+  dragX=dragX; // 回弹由 update 处理
+}
+canvas.addEventListener("pointerup",endPointer);
+canvas.addEventListener("pointercancel",e=>{if(pointer.down){clearLong();pointer.down=false;pointer.id=null}});
+document.addEventListener("contextmenu",e=>{if(!e.target.classList||!e.target.classList.contains("shareImg"))e.preventDefault()});
+document.addEventListener("gesturestart",e=>e.preventDefault());
+pauseBtn.addEventListener("click",e=>{e.stopPropagation();sfx("ui");showPause()});
+document.addEventListener("visibilitychange",()=>{if(document.hidden){if(state==="playing"||state==="countdown")showPause();musicStop();if(audioCtx&&audioCtx.suspend)audioCtx.suspend().catch(()=>{})}else if(audioCtx&&audioCtx.resume&&state==="playing")audioCtx.resume()});
+addEventListener("keydown",e=>{
+  if(state==="menu"&&e.code==="Enter"){startRun("classic");return}
+  if(e.code==="Escape"||e.code==="KeyP"){if(state==="playing")showPause();return}
+  if(state!=="playing")return;
+  if(e.code==="ArrowLeft"||e.code==="KeyA")resolve("left");
+  if(e.code==="ArrowRight"||e.code==="KeyD")resolve("right");
+  if(e.code==="Space"||e.code==="KeyI"||e.code==="ArrowDown"){e.preventDefault();inspectCurrent()}
+});
+
+/* ============================================================
+   主循环
+   ============================================================ */
+let last=performance.now(),acc=0;
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(!state.startsWith("paused")){acc+=dt;while(acc>=1/120){update(1/120);acc-=1/120}}else acc=0;
+  render();requestAnimationFrame(loop);
+}
+parseChallenge();showMenu();requestAnimationFrame(loop);
+// 测试钩子（不影响游戏）
+window.__SL={get state(){return state},get current(){return current},get score(){return score},get timeLeft(){return timeLeft},get esg(){return[env,people,trust]},resolve,inspectCurrent,get L(){return L},get tut(){return tut},computeResult,get streak(){return streak}};
+})();
+</script>
+</body>
+</html>
